@@ -20,12 +20,12 @@ fitlmm <- function ( lines, startbox, eps=0, delE=0, delS=0, M=Inf, maxit=10, ra
 	inactive <- list()
 	ninact <- 0
 	# check whether startbox is a box or a list of boxes
-	ifelse ( length(startbox)==4 &&
+	active <- ifelse ( length(startbox)==4 &&
 	           identical ( names(startbox),
 	                       c("lims.sigsqe", "lims.sigsqs", "status", "bounds")
 	                     ),
-	         active <- list(startbox),
-	         active <- startbox
+	           list(startbox),
+	           startbox
 	       )
 	#active <- list()
 	#active[[1]] <- startbox
