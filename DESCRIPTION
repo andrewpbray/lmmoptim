@@ -16,3 +16,5 @@ License: GPL-2
 LazyData: true
 Imports:
     ggplot2
+URL: http://github.com/andrewpbray/lmmoptim
+BugReports: http://github.com/andrewpbray/lmmoptim/issues
