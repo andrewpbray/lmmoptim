@@ -37,7 +37,7 @@ fitlmm <- function ( lines, startbox, eps=0, delE=0, delS=0, M=Inf, maxit=10, ra
 	killfunc <- function ( box, lb, M, eps, delE, delS, ratio ) {
 	  # lb is a lower bound on max logRL; it changes at each iteration
 	  # M, eps, delE, delS stay constant throughout the iterations.
-	  cond.low <- sum ( box$bounds[, 2] < lb - M )
+	  cond.low <- sum ( box$bounds[, 2]) < lb - M
 	  cond.eps <- sum ( box$bounds[, 2] - box$bounds[, 1] ) < eps
 	  cond.E <- ifelse ( ratio,
 	                     diff ( log(box$lims.sigsqe) ) < delE,
@@ -76,7 +76,7 @@ fitlmm <- function ( lines, startbox, eps=0, delE=0, delS=0, M=Inf, maxit=10, ra
 		nact <- length(active)
 
 		iter <- iter+1
-		write ( c ( "iteration", iter, "nact", nact, "ninact", ninact, "lowbound", lowbound ),
+		write ( c ( "iteration", iter, "nact", nact, "ninact", ninact, "lowbound", lowbound),
 	            file="bigcode.out", ncolumns=8, append=TRUE
 	          )
 	}
