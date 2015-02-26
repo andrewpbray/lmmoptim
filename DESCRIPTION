@@ -1,0 +1,18 @@
+Package: lmmoptim
+Title: Optimization routine for linear mixed models
+Version: 0.0.0.9000
+Authors@R: as.person(c(
+    "Andrew Bray <andrew.bray@gmail.com> [cre]",
+    "Michael Lavine <lavine@math.umass.edu> [aut]"
+  ))
+Description: An implementation of the optimization algorithm described in,
+    "Approximately Exact Calculations for Linear Mixed Models" by Lavine and
+    Hodges (2015).  The algorithm finds arbitrarily precise bounds on the
+    global min/max of the restricted likelihood of linear mixed models with two
+    variances. Also included are functions to visualize the likelihood function
+    and the optimization process.
+Depends: R (>= 3.1.2)
+License: GPL-2
+LazyData: true
+Imports:
+    ggplot2

@@ -1,0 +1,139 @@
+# When dividing the plane into boxes, a box should have the following attributes:
+	# xlims=sigsqelims, ylims=sigsqslims
+	# for each line, an indicator of whether the box is above, below, or straddling the line
+	# for each line, upper and lower bounds on RLL
+		
+makebox <- function ( lims.sigsqs=NA, lims.sigsqe=NA, status=NA, lines ) {
+                                     	
+  # sanity checks
+  if ( missing(lims.sigsqs) || missing(lims.sigsqe) )
+    print ( "please supply lims.sigsqs and lims.sigsqe" )
+  if ( missing(status) ) print ( "please supply status" )
+  if ( missing(lines) ) print ( "please supply lines" )
+   
+  # If the box has a parent then it inherits the parent's status.
+  # But if the parent straddles a line, we must check whether
+  # the child also straddles the line.
+  strad <- which ( status == "straddle" )
+  status[strad] <- getstatus ( lims.sigsqe = lims.sigsqe,
+                               lims.sigsqs = lims.sigsqs,
+                               lines = lines[strad,]
+                             )
+  
+  # we could get some of the bounds from the parent,
+  # but it's just as easy to recalculate them
+  bounds <- getbounds ( lims.sigsqe = lims.sigsqe,
+                        lims.sigsqs = lims.sigsqs,
+                        status = status,
+                        lines = lines
+                      )
+  
+  return ( list ( lims.sigsqe = lims.sigsqe,
+		          lims.sigsqs = lims.sigsqs,
+		          status = status,
+		          bounds = bounds
+		        )
+		 )
+} # end makebox
+
+splitbox <- function ( box, lines ) {
+	# split a box into four children
+	NW <- with ( box, makebox ( lims.sigsqe = c ( lims.sigsqe[1], mean(lims.sigsqe) ),
+	                            lims.sigsqs = c ( mean(lims.sigsqs), lims.sigsqs[2] ),
+	                            status = status,
+	                            lines = lines
+	                          )
+	           )
+	NE <- with ( box, makebox ( lims.sigsqe = c ( mean(lims.sigsqe), lims.sigsqe[2] ),
+	                            lims.sigsqs = c ( mean(lims.sigsqs), lims.sigsqs[2] ),
+	                            status = status,
+	                            lines = lines
+	                          )
+	           ) 
+	SW <- with ( box, makebox ( lims.sigsqe = c ( lims.sigsqe[1], mean(lims.sigsqe) ),
+	                            lims.sigsqs = c ( lims.sigsqs[1], mean(lims.sigsqs) ),
+	                            status = status,
+	                            lines = lines
+	                          )
+	           ) 
+	SE <- with ( box, makebox ( lims.sigsqe = c ( mean(lims.sigsqe), lims.sigsqe[2] ),
+	                            lims.sigsqs = c ( lims.sigsqs[1], mean(lims.sigsqs) ),
+	                            status = status,
+	                            lines = lines
+	                          )
+	           )
+	return ( list ( NW, NE, SW, SE ) ) # list of four boxes
+}
+
+getstatus <- function ( lims.sigsqe, lims.sigsqs, lines ){
+# Is a box above, below, or straddling the lines with these slopes and intercepts?
+	
+   # value of the lines at the left side of the box
+	tmp1 <- with ( lines, ifelse ( is.finite(slope),
+	                               int.sigsqs + slope * lims.sigsqe[1],
+	                               NA
+	                             )
+	             )
+	# value of the lines at the right side of the box
+	tmp2 <- with ( lines, ifelse ( is.finite(slope),
+	                               int.sigsqs + slope * lims.sigsqe[2],
+	                               NA
+	                             )
+	             )
+	above <- with ( lines, ifelse ( slope > -Inf, lims.sigsqs[1] > tmp1, lims.sigsqe[1] > int.sigsqe ) )
+	below <- with ( lines, ifelse ( slope > -Inf, lims.sigsqs[2] < tmp2, lims.sigsqe[2] < int.sigsqe ) )
+	straddle <- !(above | below)
+	
+	# sanity check
+	if ( any ( above & below ) ) print ( "a box can't be both above and below a line")
+	
+	status <- rep ( NA, nrow(lines) )
+	status[above] <- "above"
+	status[below] <- "below"
+	status[straddle] <- "straddle"
+	
+	return(status)
+}
+
+getbounds <- function ( lims.sigsqe, lims.sigsqs, lines, status ){
+	# small sanity check
+	if ( missing(lims.sigsqe) || missing(lims.sigsqs) )
+	  print ( "Please supply lims.sigsqe and lims.sigsqs")
+	if ( missing(lines) ) print ( "Please supply lines" )
+	if ( missing(status) ) print ( "Please supply status")
+	if ( length(status) != nrow(lines) )
+	  print ( "length(status) != nrow(lines)" )
+	
+	# evaluate each line at the upper-right corner of the box
+	ur <- with ( lines, a * lims.sigsqs[2] + lims.sigsqe[2] )
+	eval.ur <- with ( lines, -.5 * ( multiplier.log*log(ur) + multiplier.inv/ur ) )
+	# evaluate each line at the lower-left corner of the box
+	ll <- with ( lines, a * lims.sigsqs[1] + lims.sigsqe[1] )
+	eval.ll <- ifelse ( ll == 0,
+	                    -Inf,
+	                    with ( lines, -.5 * ( multiplier.log*log(ll) + multiplier.inv/ll ) )
+	                  )
+		
+	bounds <- data.frame (
+	  lower = rep ( NA, length(status) ),
+	  upper = rep ( NA, length(status) )
+	)
+    # The next two lines of code are for lines that are not straddled.
+    # "above" means the box is above the line
+	bounds$lower <- ifelse ( status == "above", eval.ur, eval.ll )
+	bounds$upper <- ifelse ( status == "above", eval.ll, eval.ur )
+	# now we'll take care of straddled lines
+	strad <- status == "straddle"
+	bounds$lower [ strad ] <- pmin ( eval.ur[strad], eval.ll[strad] )
+	# for the upper bound, we can evaluate anywhere on the line, so we might
+	# as well evaluate at (int.sigsqe,0)
+	bounds$upper [ strad ] <-
+		with ( lines[strad,],
+		       ifelse ( is.na(int.sigsqe),
+		                -.5 * ( multiplier.log * log(int.sigsqs) + multiplier.inv/int.sigsqs ), # horizontal line
+		                -.5 * ( multiplier.log * log(int.sigsqe) + multiplier.inv/int.sigsqe )  # other lines
+		              )
+		     )
+	
+	return ( bounds )
+}
