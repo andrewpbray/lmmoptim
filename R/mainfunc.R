@@ -12,10 +12,10 @@ fitlmm <- function ( lines, startbox, eps=0, delE=0, delS=0, M=Inf, maxit=10, ra
 	}
 	if ( missing ( startbox ) ) {
 		startbox <- makebox ( lines = lines,
-                              lims.sigsqs = c ( 0, max ( lines$int.sigsqs[is.finite(lines$int.sigsqs)] ) ),
-	                          lims.sigsqe = c ( 0, max ( lines$int.sigsqe[is.finite(lines$int.sigsqe)] ) ),
-	                          status = rep ( "straddle", nrow(lines) )
-	                        )
+		                      lims.sigsqs = c ( 0, max ( lines$int.sigsqs[is.finite(lines$int.sigsqs)] ) ),
+	                        lims.sigsqe = c ( 0, max ( lines$int.sigsqe[is.finite(lines$int.sigsqe)] ) ),
+	                        status = rep ( "straddle", nrow(lines) )
+		                      )
 	}
 	inactive <- list()
 	ninact <- 0
@@ -56,7 +56,7 @@ fitlmm <- function ( lines, startbox, eps=0, delE=0, delS=0, M=Inf, maxit=10, ra
 	  low.act <- max ( vapply ( X = active,
 	                            FUN = function(box) {colSums(box$bounds)[1]},
 	                            FUN.VALUE = 0.1
-	  )
+	                            ))
 		lowbound <- max ( lowbound, low.act )
 		kill <- vapply ( X = active,
 	                         FUN = killfunc,

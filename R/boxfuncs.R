@@ -69,28 +69,18 @@ getstatus <- function ( lims.sigsqe, lims.sigsqs, lines ){
 # Is a box above, below, or straddling the lines with these slopes and intercepts?
 
    # value of the lines at the left side of the box
-	tmp1 <- with ( lines, ifelse ( is.finite(slope),
-	                               int.sigsqs + slope * lims.sigsqe[1],
-	                               NA
-	                             )
-	             )
+  tmp1 <- lines$int.sigsqs + lines$slope * lims.sigsqe[1]
+  tmp1[is.infinite(tmp1)] <- NA
+
 	# value of the lines at the right side of the box
-	tmp2 <- with ( lines, ifelse ( is.finite(slope),
-	                               int.sigsqs + slope * lims.sigsqe[2],
-	                               NA
-	                             )
-	             )
-	above <- with ( lines, ifelse ( slope > -Inf, lims.sigsqs[1] > tmp1, lims.sigsqe[1] > int.sigsqe ) )
-	below <- with ( lines, ifelse ( slope > -Inf, lims.sigsqs[2] < tmp2, lims.sigsqe[2] < int.sigsqe ) )
-	straddle <- !(above | below)
+  tmp2 <- lines$int.sigsqs + lines$slope * lims.sigsqe[2]
+  tmp2[is.infinite(tmp2)] <- NA
 
-	# sanity check
-	if ( any ( above & below ) ) print ( "a box can't be both above and below a line")
-
-	status <- rep ( NA, nrow(lines) )
-	status[above] <- "above"
-	status[below] <- "below"
-	status[straddle] <- "straddle"
+  # where is the box relative to the lines?
+  status <- rep(NA, nrow(lines))
+	status[lims.sigsqs[1] > tmp1] <- "above"
+	status[lims.sigsqs[2] > tmp2] <- "below"
+	status[!(lims.sigsqs[1] > tmp1 | lims.sigsqs[2] > tmp2)] <- "straddle"
 
 	return(status)
 }
