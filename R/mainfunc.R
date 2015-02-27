@@ -74,7 +74,7 @@ fitlmm <- function(lines, startbox, eps = 0, delE = 0, delS = 0, M = Inf, maxit 
     }, FUN.VALUE = c(sigsqs.lo = 0.1, sigsqs.hi = 0.1, sigsqe.lo = 0.1, sigsqe.hi = 0.1,
         rll.lower = 0.1, rll.upper = 0.1)))
     end_time <- Sys.time()
-    write(paste(log_note, "runtime: ", round(end_time - start_time, digits = 3)),
+    write(paste(lognote, "runtime: ", round(end_time - start_time, digits = 3)),
           file = "bigcode.out", ncolumns = 1, append = TRUE)
     return(data.frame(tmp))
 }
