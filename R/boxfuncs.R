@@ -26,7 +26,7 @@ makebox <- function(lims.sigsqs = NA, lims.sigsqe = NA, status = NA, lines) {
         status = status, lines = lines)
 
     return(list(lims.sigsqe = lims.sigsqe, lims.sigsqs = lims.sigsqs, status = status,
-        bounds = bounds))
+        bounds = colSums(bounds)))
 }  # end makebox
 
 splitbox <- function(box, lines) {

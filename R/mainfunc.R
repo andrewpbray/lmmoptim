@@ -31,8 +31,8 @@ fitlmm <- function(lines, startbox, eps = 0, delE = 0, delS = 0, M = Inf, maxit 
     killfunc <- function(box, lb, M, eps, delE, delS, ratio) {
         # lb is a lower bound on max logRL; it changes at each iteration M, eps,
         # delE, delS stay constant throughout the iterations.
-        cond.low <- sum(box$bounds[, 2]) < lb - M
-        cond.eps <- sum(box$bounds[, 2] - box$bounds[, 1]) < eps
+        cond.low <- box$bounds[2] < lb - M
+        cond.eps <- diff(box$bounds) < eps
         cond.E <- ifelse(ratio, diff(log(box$lims.sigsqe)) < delE, diff(box$lims.sigsqe) <
             delE)
         cond.S <- ifelse(ratio, diff(log(box$lims.sigsqs)) < delS, diff(box$lims.sigsqs) <
@@ -44,7 +44,7 @@ fitlmm <- function(lines, startbox, eps = 0, delE = 0, delS = 0, M = Inf, maxit 
         # Find the lower bound of each box and the maximum of the lower bounds.  For
         # each active box, either make it inactive or divide it.
         low.act <- max(vapply(X = active, FUN = function(box) {
-            colSums(box$bounds)[1]
+            box$bounds[1]
         }, FUN.VALUE = 0.1))
         lowbound <- max(lowbound, low.act)
         kill <- vapply(X = active, FUN = killfunc, FUN.VALUE = TRUE, lb = lowbound,
@@ -70,7 +70,7 @@ fitlmm <- function(lines, startbox, eps = 0, delE = 0, delS = 0, M = Inf, maxit 
 
 
     tmp <- t(vapply(X = c(active, inactive), FUN = function(box) {
-        c(box$lims.sigsqs, box$lims.sigsqe, colSums(box$bounds))
+        c(box$lims.sigsqs, box$lims.sigsqe, box$bounds)
     }, FUN.VALUE = c(sigsqs.lo = 0.1, sigsqs.hi = 0.1, sigsqe.lo = 0.1, sigsqe.hi = 0.1,
         rll.lower = 0.1, rll.upper = 0.1)))
     end_time <- Sys.time()
