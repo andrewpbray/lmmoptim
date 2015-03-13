@@ -95,9 +95,13 @@ getbounds <- function(lims.sigsqe, lims.sigsqs, lines, status) {
     bounds[strad, 1] <- pmin(eval.ur[strad], eval.ll[strad])
     # for the upper bound, we can evaluate anywhere on the line, so we might as
     # well evaluate at (int.sigsqe,0)
+    #bounds[strad, 2] <- with(lines-0.5 * (multiplier.log * log(int.sigsqe) + multiplier.inv/int.sigsqe)
+    #bounds[is.na(lines$int.sigsqe)] <- with(lines[is.na(lines$int.sigsqe)],
+     #                                       -0.5 * (multiplier.log * log(int.sigsqs) +
+      #                                                multiplier.inv/int.sigsqs))
     bounds[strad, 2] <- with(lines[strad, ], ifelse(is.na(int.sigsqe), -0.5 *
-        (multiplier.log * log(int.sigsqs) + multiplier.inv/int.sigsqs), -0.5 *
-        (multiplier.log * log(int.sigsqe) + multiplier.inv/int.sigsqe)))
+       (multiplier.log * log(int.sigsqs) + multiplier.inv/int.sigsqs), -0.5 *
+       (multiplier.log * log(int.sigsqe) + multiplier.inv/int.sigsqe)))
 
     return(bounds)
 }

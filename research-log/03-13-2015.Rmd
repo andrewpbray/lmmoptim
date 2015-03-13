@@ -1,0 +1,13 @@
+---
+title: "The shape of the terms"
+author: "Andrew Bray"
+date: "March 13, 2015"
+output: html_document
+---
+
+We want to get a sense of the shape of a single term's contribution to the log 
+posterior function.
+
+\[ log \pi(\sigma^2_e, \sigma^2_s | y) = B - \frac{1}{2}\sum_j \bigg[ c_j \log(a_j \sigma^2_s + b_j \sigma^2_e) + \frac{d_j}{a_j \sigma^2_s + b_j \sigma^2_e} \bigg] \]
+
+A single term in the 

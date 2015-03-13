@@ -24,6 +24,7 @@ fitlmm <- function(lines, startbox, eps = 0, delE = 0, delS = 0, M = Inf, maxit 
         "lims.sigsqs", "status", "bounds")), list(startbox), startbox)
     # active <- list() active[[1]] <- startbox
     nact <- length(active)
+
     lowbound <- -Inf
     iter <- 0
 
