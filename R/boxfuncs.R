@@ -78,10 +78,10 @@ getbounds <- function(lims.sigsqe, lims.sigsqs, lines, status) {
         print("length(status) != nrow(lines)")
 
     # evaluate each line at the upper-right corner of the box
-    ur <- with(lines, a * lims.sigsqs[2] + lims.sigsqe[2])
+    ur <- with(lines, a * lims.sigsqs[2] + b * lims.sigsqe[2])
     eval.ur <- with(lines, -0.5 * (multiplier.log * log(ur) + multiplier.inv/ur))
     # evaluate each line at the lower-left corner of the box
-    ll <- with(lines, a * lims.sigsqs[1] + lims.sigsqe[1])
+    ll <- with(lines, a * lims.sigsqs[1] + b * lims.sigsqe[1])
     eval.ll <- ifelse(ll == 0, -Inf, with(lines, -0.5 * (multiplier.log * log(ll) +
         multiplier.inv/ll)))
 

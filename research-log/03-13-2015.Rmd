@@ -10,4 +10,78 @@ posterior function.
 
 \[ log \pi(\sigma^2_e, \sigma^2_s | y) = B - \frac{1}{2}\sum_j \bigg[ c_j \log(a_j \sigma^2_s + b_j \sigma^2_e) + \frac{d_j}{a_j \sigma^2_s + b_j \sigma^2_e} \bigg] \]
 
-A single term in the 
+## HMO example
+
+To get a sense of the shape that each term takes, we fit a simple random effects
+model.
+
+```{r global-options, echo = FALSE}
+library(knitr)
+opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+
+```{r fit-hmo}
+library(ggplot2)
+library(dplyr)
+library(devtools)
+devtools::install_github("andrewpbray/lmmoptim")
+library(lmmoptim)
+
+data(hmo)
+data(hmo_states)
+hmobig <- left_join(hmo, hmo_states, by = "state")
+
+y <- hmobig$indPrem
+n <- length(y)
+mod <- lm(indPrem ~ expPerAdm + (region=="NE") + state, data = hmobig, x = TRUE )
+x <- mod$x[, 1:3]
+z <- mod$x[, -(1:3), drop = FALSE]
+SigE <- diag(n)
+SigS <- diag(44)
+
+lines <- findlines(x, z, y, SigE, SigS)
+```
+
+```{r plot-shape}
+plotTerm <- function(lines, which.line = 1, npix = 100) {
+  c_j <- lines[which.line, "multiplier.log"]
+  d_j <- lines[which.line, "multiplier.inv"]
+  x <- seq(0, lines[which.line, "int.sigsqe"], length.out = npix)
+  y <- seq(0, lines[which.line, "int.sigsqs"], length.out = npix)
+  fterm <- function(x, y, lines, which.line) {
+    linearterm <- lines[which.line, "a"] * y + x
+    ifelse(linearterm == 0, NA,
+           -0.5 * (lines[which.line, "multiplier.log"] * log(linearterm) +
+                   lines[which.line, "multiplier.inv"]/linearterm))
+  }
+  z <- outer(x, y, FUN = fterm, lines = lines, which.line = which.line)
+
+  par(mfrow = c(1, 2))
+  # plot surface in original coordinates
+  image(x, y, z, zlim = c(.05 * min(as.numeric(z), na.rm = T),
+                          max(as.numeric(z), na.rm = T)))
+  abline(lines[which.line, "int.sigsqs"],
+         -lines[which.line, "int.sigsqs"]/lines[which.line, "int.sigsqe"],
+         col = "gray", lwd = 2, lty = 2)
+  perpslope <- tan(pi/2 - atan(lines[which.line, "int.sigsqs"]/lines[which.line, "int.sigsqe"]))
+  abline(0, 1/perpslope, col = "steelblue", lwd = 2)
+  
+  # plot trace of linear component
+  linearterm <- lines[which.line, "a"] * y + x
+  plot(linearterm, -0.5 * (c_j * log(linearterm) + d_j/linearterm), type = "n",
+       ylab = "f")
+  lines(linearterm, -0.5 * (c_j * log(linearterm) + d_j/linearterm),
+        col = "steelblue", lwd = 2)
+  
+}
+
+plotTerm(lines, which.line = 1, npix = 200)
+```
+
+```{r plot-fxn-of-line}
+
+```
+
+
+
