@@ -10,12 +10,12 @@ output:
 
 ## Where we're going
 
-A method to evaluate the likelihood or posterior for a linear mixed model as precisely as possible,
-without missing the global optimum.
+A method to evaluate the likelihood or posterior for a linear mixed model in order to
 
-<div class="centered">
-![](http://i.imgur.com/G07twm2.gif)
-</div>
+1. **Profile** the shape of the function for sensible inference
+2. **Estimate** parameters
+
+while being sure that we're not missing the global optimum.
 
 
 ## Genesis
@@ -54,13 +54,32 @@ y = X \beta + Z u + \epsilon
 \log \pi (\sigma^2_e, \sigma^2_s) = B - \frac{1}{2}\sum_j \left[ c_j \log (a_j \sigma^2_s + b_j \sigma^2_e ) \frac{d_j}{a_j \sigma^2_s + b_j \sigma^2_e} \right]
 \]
 
-## Existing Methods
+## Existing Methods in `lmer()`
 
-optimization through lmer in R
+1. BOBYQA: quadratic approximation
+2. Nelder-Mead: iterative simplex
 
-## The Algo
+<div class="centered">
+<img src="http://upload.wikimedia.org/wikipedia/commons/9/96/Nelder_Mead2.gif" width="300px" />
+</div>
+
+**Pros**: works for any $f$, derivative-free, fast
+
+**Cons**: can miss global optimum
+
+
+# The algorithm
+
+## Linear Structure
+
+\[
+\log \pi (\sigma^2_e, \sigma^2_s) = B - \frac{1}{2}\sum_j \left[ c_j \log (a_j \sigma^2_s + b_j \sigma^2_e ) \frac{d_j}{a_j \sigma^2_s + b_j \sigma^2_e} \right]
+\]
+
 
 ## Example
 
 ## Comparison to lmer
+- is M needlessley complicated?
+- why does v get a hat?
 

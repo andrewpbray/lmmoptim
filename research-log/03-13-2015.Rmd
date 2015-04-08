@@ -8,7 +8,7 @@ output: html_document
 We want to get a sense of the shape of a single term's contribution to the log 
 posterior function.
 
-\[ log \pi(\sigma^2_e, \sigma^2_s | y) = B - \frac{1}{2}\sum_j \bigg[ c_j \log(a_j \sigma^2_s + b_j \sigma^2_e) + \frac{d_j}{a_j \sigma^2_s + b_j \sigma^2_e} \bigg] \]
+\[ \log \pi(\sigma^2_e, \sigma^2_s | y) = B - \frac{1}{2}\sum_j \bigg[ c_j \log(a_j \sigma^2_s + b_j \sigma^2_e) + \frac{d_j}{(a_j \sigma^2_s + b_j \sigma^2_e)} \bigg] \]
 
 ## HMO example
 
@@ -22,9 +22,7 @@ opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
 
 ```{r fit-hmo}
-library(ggplot2)
-library(dplyr)
-library(devtools)
+library(ggplot2); library(dplyr); library(devtools);
 devtools::install_github("andrewpbray/lmmoptim")
 library(lmmoptim)
 
@@ -43,14 +41,22 @@ SigS <- diag(44)
 lines <- findlines(x, z, y, SigE, SigS)
 ```
 
-```{r plot-shape}
+In the figure below to the left, we plot only the first term in the sum, with 
+the maximum value achieved along the dotted gray line. The value of function is
+mapped to color, with lowest values being red and high values being light yellow.
+The function steeply decends near the origin, so that area is not color mapped so
+as to not saturate the color palette. The value of that the function evaluates
+to along the solid blue line is plotted separately below to the right, where it
+is a function of the linear term, $(a_j \sigma^2_s + b_j \sigma^2_e)$.
+
+```{r plot-shape, fig.height=4.75, fig.width=8}
 plotTerm <- function(lines, which.line = 1, npix = 100) {
   c_j <- lines[which.line, "multiplier.log"]
   d_j <- lines[which.line, "multiplier.inv"]
   x <- seq(0, lines[which.line, "int.sigsqe"], length.out = npix)
   y <- seq(0, lines[which.line, "int.sigsqs"], length.out = npix)
   fterm <- function(x, y, lines, which.line) {
-    linearterm <- lines[which.line, "a"] * y + x
+    linearterm <- lines[which.line, "a"] * y + lines[which.line, "b"] * x
     ifelse(linearterm == 0, NA,
            -0.5 * (lines[which.line, "multiplier.log"] * log(linearterm) +
                    lines[which.line, "multiplier.inv"]/linearterm))
@@ -70,18 +76,50 @@ plotTerm <- function(lines, which.line = 1, npix = 100) {
   # plot trace of linear component
   linearterm <- lines[which.line, "a"] * y + x
   plot(linearterm, -0.5 * (c_j * log(linearterm) + d_j/linearterm), type = "n",
-       ylab = "f")
+       ylab = "f", xlab = "linear term")
   lines(linearterm, -0.5 * (c_j * log(linearterm) + d_j/linearterm),
         col = "steelblue", lwd = 2)
-  
+  abline(v = linearterm[which.max(-0.5 * (c_j * log(linearterm) + d_j/linearterm))],
+         col = "tomato")
 }
 
 plotTerm(lines, which.line = 1, npix = 200)
 ```
 
-```{r plot-fxn-of-line}
+We can see that the function drops off very sharply towards the origin and very
+gradually away from it. It's maximum is indicated with the vertical red line.
 
+Each term in the sum will have it's own set of line parameters, $\{ a_j, b_j\}$,
+and function shape parameters, $\{c_j, d_j \}$. $c_j$ is one for all terms except
+that corresponding to the prior, while the values of $d_j$ range the first three
+orders of magnitude (at least in the HMO model). Below we plot the shape of the 
+function corresponding to three different values of $d_j$ and indicate the max with
+a vertical red line (note the differing y axes).
+
+```{r log-fxn, fig.height=3.2, fig.width=8}
+x <- 1:6000
+minv <- c(30, 300, 3000)
+maxes <- rep(NA, 3)
+par(mfrow = c(1, 3))
+for(i in 1:3) {
+  fx <- -0.5 * (log(x) + minv[i]/x)
+  plot(x, fx, type = "n", ylab = "f", xlab = "linear term",
+       main = bquote(d[j] ~ "=" ~ .(minv[i])))
+  lines(x, fx, col = "steelblue", lwd = 2)
+  abline(v = which.max(fx), col = "tomato")
+  maxes[i] <- max(fx)
+}
 ```
 
+Some take away lessons from this:
 
+1. The maximum values of each of these terms are similar, `r round(maxes, 2)`.
+1. At higher $d_j$, the function can achieve very low values, but only over a
+shrinking domain near the origin. If we avoid the origin on these terms, we 
+we should be good.
+2. At lower $d_j$, the range of the function is more restricted, but it is more
+variable.
 
+Can we be more efficient by addressing the terms in order by descending $d_j$?
+Is there any sensible way to rescale each term so that some of these parameters
+are standardized across the terms, then optimize, then undo the scaling?

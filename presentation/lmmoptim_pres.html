@@ -112,10 +112,14 @@
 
 <slide class=''><hgroup><h2>Where we&#39;re going</h2></hgroup><article  id="where-were-going">
 
-<p>A method to evaluate the likelihood or posterior for a linear mixed model as precisely as possible, without missing the global optimum.</p>
+<p>A method to evaluate the likelihood or posterior for a linear mixed model in order to</p>
 
-<div class="centered">
-<img src='http://i.imgur.com/G07twm2.gif' title=''/></div>
+<ol>
+<li><strong>Profile</strong> the shape of the function for sensible inference</li>
+<li><strong>Estimate</strong> parameters</li>
+</ol>
+
+<p>while being sure that we&#39;re not missing the global optimum.</p>
 
 </article></slide><slide class=''><hgroup><h2>Genesis</h2></hgroup><article  id="genesis">
 
@@ -154,15 +158,36 @@ y = X \beta + Z u + \epsilon
 \log \pi (\sigma^2_e, \sigma^2_s) = B - \frac{1}{2}\sum_j \left[ c_j \log (a_j \sigma^2_s + b_j \sigma^2_e ) \frac{d_j}{a_j \sigma^2_s + b_j \sigma^2_e} \right]
 \]</p>
 
-</article></slide><slide class=''><hgroup><h2>Existing Methods</h2></hgroup><article  id="existing-methods">
+</article></slide><slide class=''><hgroup><h2>Existing Methods in <code>lmer()</code></h2></hgroup><article  id="existing-methods-in-lmer">
 
-<p>optimization through lmer in R</p>
+<ol>
+<li>BOBYQA: quadratic approximation</li>
+<li>Nelder-Mead: iterative simplex</li>
+</ol>
 
-</article></slide><slide class=''><hgroup><h2>The Algo</h2></hgroup><article  id="the-algo">
+<div class="centered">
+<img src="http://upload.wikimedia.org/wikipedia/commons/9/96/Nelder_Mead2.gif" width="300px" /></div>
+
+<p><strong>Pros</strong>: works for any \(f\), derivative-free, fast</p>
+
+<p><strong>Cons</strong>: can miss global optima</p>
+
+</article></slide><slide class='segue dark nobackground'><hgroup class = 'auto-fadein'><h2>The algorithm</h2></hgroup><article  id="the-algorithm">
+
+</article></slide><slide class=''><hgroup><h2>Linear Structure</h2></hgroup><article  id="linear-structure">
+
+<p>\[
+\log \pi (\sigma^2_e, \sigma^2_s) = B - \frac{1}{2}\sum_j \left[ c_j \log (a_j \sigma^2_s + b_j \sigma^2_e ) \frac{d_j}{a_j \sigma^2_s + b_j \sigma^2_e} \right]
+\]</p>
 
 </article></slide><slide class=''><hgroup><h2>Example</h2></hgroup><article  id="example">
 
-</article></slide><slide class=''><hgroup><h2>Comparison to lmer</h2></hgroup><article  id="comparison-to-lmer"></article></slide>
+</article></slide><slide class=''><hgroup><h2>Comparison to lmer</h2></hgroup><article  id="comparison-to-lmer">
+
+<ul>
+<li>is M needlessley complicated?</li>
+<li>why does v get a hat?</li>
+</ul></article></slide>
 
 
   <slide class="backdrop"></slide>
