@@ -1,0 +1,66 @@
+---
+title: "Approximately Exact Calculations for LMM"
+author: "Andrew Bray, UMass Amherst"
+date: "April 15, 2015"
+output:
+  ioslides_presentation:
+    logo: umass_seal.png
+---
+
+
+## Where we're going
+
+A method to evaluate the likelihood or posterior for a linear mixed model as precisely as possible,
+without missing the global optimum.
+
+<div class="centered">
+![](http://i.imgur.com/G07twm2.gif)
+</div>
+
+
+## Genesis
+
+*Approximately Exact Calculations for Linear Mixed Models*, Lavine and Hodges, 2015.
+
+
+## Linear Mixed Models
+
+\[ 
+y = X \beta + Z u + \epsilon
+\]
+
+- $y$: vector of $n$ observations
+- $X$: known $n \times p$ matrix
+- $\beta$: vector of $p$ unknown fixed effects coefs
+- $Z$: $n \times q$ matrix
+- $u$: vector of $q$ unknown random effects coefs
+- $\epsilon$: vector of $n$ errors
+
+\[
+\epsilon \sim \textrm{N}(0, \sigma^2_e \Sigma_e); \quad u \sim \textrm{N}(0, \sigma^2_s \Sigma_s)
+\]
+
+## The Objective Functions
+
+**Log restricted likelihood**
+
+\[
+\log \textrm{RL} (\sigma^2_e, \sigma^2_s) = B - \frac{n_e}{2}\log(\sigma^2_e) - \frac{y'\Gamma_c \Gamma_c' y}{2 \sigma^2_e} - \frac{1}{2} \sum_j \left[ \log(a_j \sigma^2_s + \sigma^2_e) + \frac{\hat{v}^2_j}{a_j \sigma^2_s + \sigma^2_e} \right]
+\]
+
+**Log posterior**
+
+\[
+\log \pi (\sigma^2_e, \sigma^2_s) = B - \frac{1}{2}\sum_j \left[ c_j \log (a_j \sigma^2_s + b_j \sigma^2_e ) \frac{d_j}{a_j \sigma^2_s + b_j \sigma^2_e} \right]
+\]
+
+## Existing Methods
+
+optimization through lmer in R
+
+## The Algo
+
+## Example
+
+## Comparison to lmer
+
