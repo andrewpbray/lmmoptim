@@ -26,6 +26,12 @@ while being sure that we're not missing the global optimum.
 
 ## Genesis
 
+<div class="centered">
+<img src="richly-book.jpg" width="200px" />
+</div>
+
+\
+
 *Approximately Exact Calculations for Linear Mixed Models*, Lavine and Hodges, 2015.
 
 
@@ -46,6 +52,25 @@ y = X \beta + Z u + \epsilon
 \epsilon \sim \textrm{N}(0, \sigma^2_e \Sigma_e); \quad u \sim \textrm{N}(0, \sigma^2_s \Sigma_s)
 \]
 
+## Traditional estimation
+
+
+
+## Existing Methods in `lmer, nlme`
+
+1. BOBYQA: quadratic approximation
+2. Nelder-Mead: iterative simplex
+3. BFGS: quasi-Newton
+
+<div class="centered">
+<img src="http://upload.wikimedia.org/wikipedia/commons/9/96/Nelder_Mead2.gif" width="300px" />
+</div>
+
+**Pros**: works for any $f$, derivative-free, fast
+
+**Cons**: may not converge, can miss global optima
+
+
 ## The Re-expression
 
 ## The Objective Functions
@@ -62,26 +87,23 @@ y = X \beta + Z u + \epsilon
 \log \pi (\sigma^2_e, \sigma^2_s) = B - \frac{1}{2}\sum_j \left[ c_j \log (a_j \sigma^2_s + b_j \sigma^2_e ) \frac{d_j}{a_j \sigma^2_s + b_j \sigma^2_e} \right]
 \]
 
-## Existing Methods in `lmer()`
-
-1. BOBYQA: quadratic approximation
-2. Nelder-Mead: iterative simplex
-
-<div class="centered">
-<img src="http://upload.wikimedia.org/wikipedia/commons/9/96/Nelder_Mead2.gif" width="300px" />
-</div>
-
-**Pros**: works for any $f$, derivative-free, fast
-
-**Cons**: can miss global optimum
 
 
-# The algorithm
+# Groundwork
 
-## Linear Structure {.smaller .build}
+## Objectives
+
+Develop a method to evaluate $f(\sigma^2_e, \sigma^2_s)$ in order to
+
+1. **Profile** the shape of the function for sensible inference
+2. **Estimate** parameters
+
+
+
+## Exploiting the Linear structure {.smaller .build}
 
 $$
-\log f(\sigma^2_e, \sigma^2_s) \propto \sum_j \left[ c_j \log (a_j \sigma^2_s + b_j \sigma^2_e ) + \frac{d_j}{(a_j \sigma^2_s + b_j \sigma^2_e)} \right]
+f(\sigma^2_e, \sigma^2_s) \propto \sum_j \left[ c_j \log (a_j \sigma^2_s + b_j \sigma^2_e ) + \frac{d_j}{(a_j \sigma^2_s + b_j \sigma^2_e)} \right]
 $$
 
 <hr>
@@ -89,7 +111,7 @@ $$
 \
 
 $$
-\frac{\partial \log f(\sigma^2_e, \sigma^2_s)}{\partial \sigma^2_e} \propto \sum_j \frac{a_j (a_j c_j \sigma^2_s + b_j c_j \sigma^2_e - d_j)}{(a_j \sigma^2_s + b_j \sigma^2_e)^2}
+\frac{\partial f(\sigma^2_e, \sigma^2_s)}{\partial \sigma^2_e} \propto \sum_j \frac{a_j (a_j c_j \sigma^2_s + b_j c_j \sigma^2_e - d_j)}{(a_j \sigma^2_s + b_j \sigma^2_e)^2}
 $$
 
 \
@@ -130,7 +152,7 @@ mypal <- colorRampPalette(brewer.pal(6 , "YlOrRd"))
 xyzdf$zbinned <- cut(xyzdf$z,breaks = c(-Inf, seq(-2.5, -1.3, length.out = 14)), right = FALSE)
 p <- ggplot(xyzdf) + aes(x = x, y = y, fill = zbinned) +
   scale_fill_manual(values = rev(mypal(15)))+
-  labs(x = expression(sigma[e]^2), y = expression(sigma[s]^2), fill = "log f") +
+  labs(x = expression(sigma[e]^2), y = expression(sigma[s]^2), fill = "f") +
   theme_bw()
 q <- p + geom_tile(alpha = 0) +
   geom_abline(intercept = d_j / (a_j * c_j), slope = -b_j / a_j, col = "cadetblue", lwd = 1.5)
@@ -139,14 +161,14 @@ q
 
 $a_j = 12.9; \quad b_j = 1; \quad c_j = 1; \quad d_j = 5$
 
-$\log f$ is maxed along $\sigma^2_s = \frac{d_j}{a_j c_j} - \frac{b_j}{a_j}\sigma^2_e$
+$f$ is maxed along $\sigma^2_s = \frac{d_j}{a_j c_j} - \frac{b_j}{a_j}\sigma^2_e$
 
 
 ## Contribution of one term {.smaller .flexbox .vcenter}
 
 ```{r heatmap2, fig.align='center', fig.height=4.5, fig.width=5.9}
-q + annotate("point", pch = "+", x = 1, y = .05, size = 15) + 
-  annotate("point", pch = "-", x = 7, y = .3, size = 18)
+q + annotate("point", pch = "+", x = 1, y = .05, size = 13) + 
+  annotate("point", pch = "-", x = 7, y = .3, size = 16)
 ```
 
 &nbsp;
@@ -243,7 +265,7 @@ b4 + annotate("point", x = 20, y = .925, col = "navajowhite") +
 
 ## Contribution of one term {.build}
 
-> - Each term is maximized along a line in QI.
+> - Each term is maximized along a line in Q1.
 > - Slope < 0 and intercept > 0.
 > - Within $b$ the top-right and bottom-left form the bounds.
 >     - above the line, $\left(f(TR), f(BL)\right)$
