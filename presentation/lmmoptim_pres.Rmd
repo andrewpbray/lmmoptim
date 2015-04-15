@@ -23,6 +23,9 @@ A method to evaluate the likelihood or posterior for a linear mixed model in ord
 
 while being sure that we're not missing the global optimum.
 
+<div class="centered">
+<img src="lines.png" width="250px" />
+</div>
 
 ## Genesis
 
@@ -347,7 +350,7 @@ b4 + annotate("point", x = 20, y = .925, col = "navajowhite") +
 >     - straddle the line, $\left(min(f(TR), f(BL)), f(line)\right)$
 > - For narrower bounds, subdivide $b$ (branch).
 
-## Contribution of two terms {.smaller .flexbox .vcenter}
+## Contribution of two terms {.smaller}
 
 ```{r twoterms, fig.align='center', fig.height=4.5, fig.width=5.9}
 w2 <- p + geom_tile(alpha = 0) +
@@ -360,7 +363,9 @@ w2 + annotate("text", x = 11, y = .03, label = "j = 1", size = 4) +
   geom_abline(intercept = d_j / (a_j * c_j), slope = -b_j / a_j, col = "cadetblue", lwd = 1.5)
 ```
 
-$j = 1; \quad \left( f_1(B), f_1(A) \right)$
+$$
+j = 1; \quad \left(f_1(B), f_1(A) \right)
+$$
 
 &nbsp;
 
@@ -373,15 +378,97 @@ w2 + annotate("text", x = 11, y = .03, label = "j = 1", size = 4, col = "grey") 
   geom_abline(intercept = 1.8, slope = -.018, col = "cadetblue", lwd = 1.5)
 ```
 
-$j = 1; \quad \left( f_1(B), f_1(A) \right)$
+$$
+j = 1; \quad \left(f_1(B), f_1(A) \right) \\
+j = 2; \quad \left(f_2(A), f_2(B) \right)
+$$
 
-$j = 2; \quad \left( f_2(A), f_2(B) \right)$
-  
-# Example: Heath care costs
+## Contribution of two terms {.smaller .flexbox .vcenter}
+
+```{r twoterms3, fig.align='center', fig.height=4.5, fig.width=5.9}
+w2 + annotate("text", x = 11, y = .03, label = "j = 1", size = 4, col = "grey") +
+  geom_abline(intercept = d_j / (a_j * c_j), slope = -b_j / a_j, col = "lightgrey", lwd = 1.5) +
+  annotate("text", x = 53, y = .6, size = 4, label = "j = 2") +
+  geom_abline(intercept = 1.8, slope = -.018, col = "cadetblue", lwd = 1.5)
+```
 
 
-## Comparison to lmer
-- reorder heatmap levels in legend
-- is M needlessley complicated?
-- why does v get a hat?
+$$
+ \left.\begin{aligned}
+        j &= 1; \quad \left(f_1(B), f_1(A) \right)\\
+        j &= 2; \quad \left(f_2(A), f_2(B) \right)
+       \end{aligned}
+ \right\}
+ \qquad \underbrace{f_1(B) + f_2(A)}_{L^b}, \underbrace{f_1(A) + f_2(B)}_{U^b}
+$$
 
+## Observations from two terms {.build}
+
+Within box $b$, the bounds on $f$ can be formed by
+
+$$
+L^b \equiv \sum_j L^b_j \\
+U^b \equiv \sum_j U^b_j
+$$
+
+where each term in the sum is $f_j(p)$ evaluated at the appropriate point $p$.
+
+Because $f$ is continuous, $U^b - L^b \rightarrow 0$ as $b$ shrinks in both directions.
+
+# An algorithm
+
+## {.build}
+
+To evaluate $f$ arbitrarily well everywhere within $B$,
+
+> 1. Specify $\epsilon$.
+> 2. With $y, X, Z$ compute $\{a_j, b_j, c_j, d_j\}$ for all $j$.
+> 3. For every active box $b$
+>  - evaluate $f_j(p)$ for all $j$ to get $L^b, U^b$
+>  - if $U^b - L^b < \epsilon$, make $b$ inactive
+>  - else subdivide $b$ into 4 active boxes and repeat (3).
+
+\
+
+For optimization only:
+
+- make $b$ inactive if $U^b << L^{global}$
+
+
+# Example
+
+## Health care costs {.build}
+
+**Question**: what will be the estimated cost of moving people to HMO plans?
+
+Data on cost of $i = 1, \ldots, 341$ plans in $j = 1, \ldots, 45$ states
+
+$$
+\begin{aligned}
+y_{ij} &= \alpha_j + \epsilon_{ij} \\
+\alpha_j &= \beta_0 + \beta_1 x_{1j} + \beta_2 x_{2j} + \delta_j
+\end{aligned}
+$$
+
+- $X$: 341 $\times$ 3 matrix
+- $Z$: 341 $\times$ 45 matrix
+
+## Terms in the sum
+
+<div class="centered">
+<img src="lines.png" width="500px" />
+</div>
+
+
+## Partitioning sequence
+
+<div class="centered">
+<img src="boxes.png" width="500px" />
+</div>
+
+
+## Restricted LL
+
+<div class="centered">
+<img src="rll.png" width="500px" />
+</div>
