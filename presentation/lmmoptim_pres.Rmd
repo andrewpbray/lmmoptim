@@ -71,13 +71,14 @@ Main burden of calculation: optimize the **restricted likelihood**.
 <img src="http://upload.wikimedia.org/wikipedia/commons/9/96/Nelder_Mead2.gif" width="300px" />
 </div>
 
-> - BOBYQA: quadratic approximation
 > - Nelder-Mead: iterative simplex
+> - BOBYQA: quadratic approximation
 > - BFGS: quasi-Newton
 
 > - **Pros**: works for any $f$, derivative-free, fast
 > - **Cons**: may not converge, can miss global optima
 
+# Groundwork
 
 ## The Re-expression {.build}
 
@@ -101,24 +102,7 @@ $$
 \{a_j, b_j, c_j, d_j\} > 0
 $$
 
-
-# Groundwork
-
-## Objectives {.build}
-
-Develop a method to evaluate $f(\sigma^2_e, \sigma^2_s)$ in order to
-
-1. **Profile** the shape of the function for sensible inference
-2. **Estimate** parameters
-
-\
-
-$$
-f(\sigma^2_e, \sigma^2_s) \propto \sum_j \left[ c_j \log (a_j \sigma^2_s + b_j \sigma^2_e ) +  \frac{d_j}{a_j \sigma^2_s + b_j \sigma^2_e} \right]
-$$
-
-
-## Exploiting the Linear structure
+## Exploiting the linear structure
 
 $$
 c_j \log(\textrm{linear term}) + \frac{d_j}{\textrm{linear term}}
@@ -140,7 +124,7 @@ for(i in 1:3) {
 ```
 
 
-## Exploiting the Linear structure {.smaller .build}
+## Exploiting the linear structure {.smaller .build}
 
 $$
 f(\sigma^2_e, \sigma^2_s) \propto \sum_j \left[ c_j \log (a_j \sigma^2_s + b_j \sigma^2_e ) + \frac{d_j}{(a_j \sigma^2_s + b_j \sigma^2_e)} \right]
@@ -419,7 +403,7 @@ Because $f$ is continuous, $U^b - L^b \rightarrow 0$ as $b$ shrinks in both dire
 
 ## {.build}
 
-To evaluate $f$ arbitrarily well everywhere within $B$,
+To evaluate $f$ arbitrarily well everywhere within active box $B$,
 
 > 1. Specify $\epsilon$.
 > 2. With $y, X, Z$ compute $\{a_j, b_j, c_j, d_j\}$ for all $j$.
@@ -450,8 +434,13 @@ y_{ij} &= \alpha_j + \epsilon_{ij} \\
 \end{aligned}
 $$
 
-- $X$: 341 $\times$ 3 matrix
+- $y$: vector of plan costs
+- $X$: 341 $\times$ 3 matrix (intercept, avg. cost, New England)
 - $Z$: 341 $\times$ 45 matrix
+
+$$
+\epsilon \sim \textrm{N}(0, \sigma^2_e \Sigma_e); \quad \delta \sim \textrm{N}(0, \sigma^2_s \Sigma_s)
+$$
 
 ## Terms in the sum
 
@@ -459,16 +448,66 @@ $$
 <img src="lines.png" width="500px" />
 </div>
 
-
-## Partitioning sequence
+## 10 iterations, 640 boxes
 
 <div class="centered">
 <img src="boxes.png" width="500px" />
 </div>
-
 
 ## Restricted LL
 
 <div class="centered">
 <img src="rll.png" width="500px" />
 </div>
+
+## 12 iterations, 37,516 boxes
+
+<div class="centered">
+<img src="boxes2.png" width="500px" />
+</div>
+
+
+## Restricted LL
+
+<div class="centered">
+<img src="rll2.png" width="500px" />
+</div>
+
+
+# Remarks
+
+## Where we went
+
+A method to evaluate the likelihood or posterior for a linear mixed model in order to
+
+1. **Profile** the shape of the function for sensible inference
+2. **Estimate** parameters
+
+while being sure that **we're not missing global optima**.
+
+<div class="centered">
+<img src="lines.png" width="250px" />
+</div>
+
+## Next steps {.build}
+
+> - Efficiency/Speed
+>     - Utilize structure of $f$
+>     - Pre-allocate memory for (`library(data.table)`)
+>     - Sequential runs / alternation.
+> - Generalization
+>     - Three variance? Four Variance?
+
+## Resources {.smaller}
+
+- R package and this presentation at:
+
+`www.github.com/andrewpbray/lmmoptim`
+
+- Lavine & Hodges (2015), *Approximately Exact Calculations for Linear Mixed Models*.
+- Hodges (2013), *Richly Parameterized Linear Models*, CRC Press.
+- Reich & Hodges (2008), *Identification of the variance components in the general two-variance linear model*, Journal of Statistical Planning and Inference.
+
+\
+
+Thanks for having us!
