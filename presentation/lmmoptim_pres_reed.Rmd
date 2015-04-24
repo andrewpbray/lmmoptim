@@ -1,6 +1,6 @@
 ---
 title: "Approximately Exact Calculations for LMM"
-author: "Andrew Bray, UMass Amherst"
+author: "Andrew Bray, UMass Amherst & Reed College"
 date: "April 30, 2015"
 output:
   ioslides_presentation:
@@ -216,10 +216,6 @@ shinyApp(
 )
 ```
 
-```{r global-opts2, echo = FALSE, message = FALSE}
-library(knitr)
-opts_chunk$set(echo = FALSE, cache = TRUE)
-```
 
 # Groundwork
 
