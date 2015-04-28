@@ -13,56 +13,38 @@ library(knitr)
 opts_chunk$set(echo = FALSE, cache = TRUE)
 ```
 
+## While you're waiting . . . {.smaller}
 
-## Where we're going
+48 male bank supervisors were asked to assume the role of the personnel director of a bank and were given a personnel file to judge whether the person should be promoted to a branch manager position. The files given to the participants were identical, except that half of them indicated the candidate was male and the other half indicated the candidate was female. These files were randomly assigned to the supervisiors
 
-A method to evaluate the likelihood or posterior for a linear mixed model in order to
+For each supervisor we recorded the gender associated with the assigned file and the promotion decision.
 
-1. **Profile** the shape of the function for sensible inference
-2. **Estimate** parameters
+|           |     promoted|     not promoted     |
+|----------:|:-----------:|:--------------------:|
+|male       |           21|          3           |
+|female     |           14|          10          |
 
-while being sure that we're not missing the global optimum.
+**Is this data consistent with the claim that females are unfairly discriminated against in promotion decisions? **
 
-<div class="centered">
-<img src="lines.png" width="250px" />
-</div>
-
-## Genesis
-
-<div class="centered">
-<img src="richly-book.jpg" width="200px" />
-</div>
-
-\
-
-*Approximately Exact Calculations for Linear Mixed Models*, Lavine and Hodges, 2015.
+<!---
+From: Rosen B and Jerdee T. 1974. ``Influence of sex role stereotypes on personnel decisions.'' Journal of Applied Psychology 59(1):9-14
+-->
 
 
-## Linear Mixed Models
 
-\[ 
-y = X \beta + Z u + \epsilon
-\]
 
-- $y$: vector of $n$ observations
-- $X$: known $n \times p$ matrix
-- $\beta$: vector of $p$ unknown fixed effects coefs
-- $Z$: $n \times q$ matrix
-- $u$: vector of $q$ unknown random effects coefs
-- $\epsilon$: vector of $n$ errors
+# Learning a function
 
-\[
-\epsilon \sim \textrm{N}(0, R); \quad u \sim \textrm{N}(0, G)
-\]
+## Learning a function
 
-## Traditional estimation {.build}
+- Where is the function high? Low?
+- How many modes?
+- 
 
-> 1. Integrate out the fixed effects, maximize the restricted likelihood ($RL$) to estimate $G$ and $R$.
-> 2. Treat $G$, $R$ as known. Plug into ML estimate for $\beta$ and $u$.
+$$
+\log \pi (\sigma^2_e, \sigma^2_s) \propto \sum_j \left[ c_j \log (a_j \sigma^2_s + b_j \sigma^2_e ) +  \frac{d_j}{a_j \sigma^2_s + b_j \sigma^2_e} \right]
+$$
 
-\
-
-Main burden of calculation: optimize the **restricted likelihood**.
 
 
 ## Existing Methods in `lmer, nlme` {.build}
@@ -217,7 +199,6 @@ shinyApp(
 ```
 
 
-# Groundwork
 
 ## The Re-expression {.build}
 
@@ -558,95 +539,7 @@ For optimization only:
 - make $b$ inactive if $U^b << L^{global}$
 
 
-# Example
+# The Likelihood Function
 
-## Health care costs {.build}
+##
 
-**Question**: what will be the estimated cost of moving people to HMO plans?
-
-Data on cost of $i = 1, \ldots, 341$ plans in $j = 1, \ldots, 45$ states
-
-$$
-\begin{aligned}
-y_{ij} &= \alpha_j + \epsilon_{ij} \\
-\alpha_j &= \beta_0 + \beta_1 x_{1j} + \beta_2 x_{2j} + \delta_j
-\end{aligned}
-$$
-
-- $y$: vector of plan costs
-- $X$: 341 $\times$ 3 matrix (intercept, avg. cost, New England)
-- $Z$: 341 $\times$ 45 matrix
-
-$$
-\epsilon \sim \textrm{N}(0, \sigma^2_e \Sigma_e); \quad \delta \sim \textrm{N}(0, \sigma^2_s \Sigma_s)
-$$
-
-## Terms in the sum
-
-<div class="centered">
-<img src="lines.png" width="500px" />
-</div>
-
-## 10 iterations, 640 boxes
-
-<div class="centered">
-<img src="boxes.png" width="500px" />
-</div>
-
-## Restricted LL
-
-<div class="centered">
-<img src="rll.png" width="500px" />
-</div>
-
-## 12 iterations, 37,516 boxes
-
-<div class="centered">
-<img src="boxes2.png" width="500px" />
-</div>
-
-
-## Restricted LL
-
-<div class="centered">
-<img src="rll2.png" width="500px" />
-</div>
-
-
-# Remarks
-
-## Where we went
-
-A method to evaluate the likelihood or posterior for a linear mixed model in order to
-
-1. **Profile** the shape of the function for sensible inference
-2. **Estimate** parameters
-
-while being sure that **we're not missing global optima**.
-
-<div class="centered">
-<img src="lines.png" width="250px" />
-</div>
-
-## Next steps {.build}
-
-> - Efficiency/Speed
->     - Utilize structure of $f$
->     - Pre-allocate memory for (`library(data.table)`)
->     - Sequential runs / alternation.
-> - Generalization
->     - Three variance? Four Variance?
-
-## Resources {.smaller}
-
-- R package and this presentation at:
-
-`www.github.com/andrewpbray/lmmoptim`
-
-- Lavine & Hodges (2015), *Approximately Exact Calculations for Linear Mixed Models*.
-- Hodges (2013), *Richly Parameterized Linear Models*, CRC Press.
-- Reich & Hodges (2008), *Identification of the variance components in the general two-variance linear model*, Journal of Statistical Planning and Inference.
-
-\
-
-Thanks for having us!
