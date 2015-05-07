@@ -1,18 +1,17 @@
 ---
 title: "Branch, Bound, & Kill"
+subtitle: "a family-friendly algorithm for statistical inference"
 author: "Andrew Bray, UMass Amherst / Mount Holyoke / Reed College"
 date: "April 30, 2015"
 output:
   ioslides_presentation:
     mathjax: "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
     logo: umass_seal.png
-  runtime: shiny
 ---
 
 ```{r global-opts, echo = FALSE, message = FALSE}
-#   runtime: shiny
 library(knitr)
-opts_chunk$set(echo = FALSE, cache = TRUE)
+opts_chunk$set(echo = FALSE, cache = TRUE, message = FALSE, error = FALSE)
 ```
 
 ## While you're waiting . . . {.smaller}
@@ -43,7 +42,7 @@ Adapted from: Rosen B and Jerdee T. 1974. ``Influence of sex role stereotypes on
 
 # Branch, Bound, & Kill
 
-## Learning a function {.build}
+## Learning a function {.build .smaller}
 
 > - Where is the function high? Low?
 > - Steep? Flat?
@@ -55,14 +54,22 @@ f'(x) = 18 - 6x \\
 f''(x) = -6
 $$
 
-```{r echo=FALSE, eval=FALSE}
-x <- seq(-15, 15, .01)
+```{r fx, fig.height = 3.5, fig.width = 4, fig.align='center'}
+x <- seq(-1, 7, .01)
 y <- 18 * x - 3 * x^2
-plot(y ~ x, type = "l")
-abline(v = 3, col = "goldenrod")
+plot(y ~ x, type = "l", lwd = 3, col = "goldenrod")
 ```
 
-## Learning a function without Calculus
+## Learning a function without Calculus {.build}
+
+> - Evaluate $f(x)$ at any point $x$.
+> - Bound $f(x)$ on any interval of $x$.
+
+Learn by iterating over:
+
+1. **Bound**
+2. **Kill**
+3. **Branch**
 
 ## Bound
 
@@ -123,7 +130,7 @@ m <- data.frame("ind" = 1:2^maxit,
 
 plot(range(d$x), range(d$y), type = "n", xlab = "x", ylab = "f(x)",
      bty = "n", xaxp = c(1, 5.5, 10))
-lines(d, col = COL[1], lwd = 3)
+#lines(d, col = COL[1], lwd = 3)
 
 m2 <- branchNbound(m, d, it = 1, epsilon = .1)
 ```
@@ -133,7 +140,7 @@ m2 <- branchNbound(m, d, it = 1, epsilon = .1)
 ```{r boundplot2}
 plot(range(d$x), range(d$y), type = "n", xlab = "x", ylab = "f(x)",
      bty = "n", xaxp = c(1, 5.5, 10))
-lines(d, col = COL[1], lwd = 3)
+#lines(d, col = COL[1], lwd = 3)
 
 segs <- unique(m2$membership_old)
 for (i in segs) { # bound
@@ -148,7 +155,7 @@ for (i in segs) { # bound
 ```{r killplot1}
 plot(range(d$x), range(d$y), type = "n", xlab = "x", ylab = "f(x)",
      bty = "n", xaxp = c(1, 5.5, 10))
-lines(d, col = COL[1], lwd = 3)
+#lines(d, col = COL[1], lwd = 3)
 
 segs <- unique(m2$membership_old)
 for (i in segs) { # bound
@@ -163,7 +170,7 @@ for (i in segs) { # bound
 ```{r killplot2}
 plot(range(d$x), range(d$y), type = "n", xlab = "x", ylab = "f(x)",
      bty = "n", xaxp = c(1, 5.5, 10))
-lines(d, col = COL[1], lwd = 3)
+#lines(d, col = COL[1], lwd = 3)
 
 segs <- unique(m2$membership_old)
 for (i in segs) { # bound
@@ -182,7 +189,7 @@ text(x = 5.48, y = .3, label = expression(epsilon), cex = 1.7)
 ```{r branchplot}
 plot(range(d$x), range(d$y), type = "n", xlab = "x", ylab = "f(x)",
      bty = "n", xaxp = c(1, 5.5, 10))
-lines(d, col = COL[1], lwd = 3)
+#lines(d, col = COL[1], lwd = 3)
 
 segs <- unique(m2$membership_old)
 for (i in segs) { # bound
@@ -203,7 +210,7 @@ for (i in segs) { # bound
 ```{r branchboundplot}
 plot(range(d$x), range(d$y), type = "n", xlab = "x", ylab = "f(x)",
      bty = "n", xaxp = c(1, 5.5, 10))
-lines(d, col = COL[1], lwd = 3)
+#lines(d, col = COL[1], lwd = 3)
 
 dit <- 4
 m2 <- branchNbound(m, d, it = 2, epsilon = .2)
@@ -251,7 +258,7 @@ segs <- unique(m2$membership_old)
 
 ## 
 
-```{r bkk-app, cache = FALSE, echo = FALSE, message=FALSE, eval = TRUE}
+```{r bkk-app, cache = FALSE, echo = FALSE, message=FALSE, eval = FALSE}
 library(shiny)
 library(wesanderson)
 library(dplyr)
@@ -453,7 +460,7 @@ $$
 ## The Likelihood Function
 
 ```{r, echo = FALSE, fig.align='center', fig.height=4.5, fig.width=5.9, cache = TRUE}
-pPromote <- seq(0, 1, .01)
+pPromote <- seq(0, 1, .001)
 Lfn <- function(pYgM, pYgF, tab, loglik = TRUE) {
   lik <- dbinom(tab[1, 1], rowSums(tab)[1], pYgM) * dbinom(tab[2, 1], rowSums(tab)[2], pYgF)
   if (loglik) {
@@ -464,7 +471,7 @@ lik <- outer(pPromote, pPromote, tab = tab, FUN = Lfn, loglik = FALSE)
 
 # plot surface in original coordinates
 library(ggplot2); library(RColorBrewer)
-mypal <- colorRampPalette(brewer.pal(9 , "OrRd"))
+mypal <- colorRampPalette(brewer.pal(9 , "YlOrRd"))
 xyz <- data.frame(x = rep(pPromote, length(pPromote)),
                     y = rep(pPromote, each = length(pPromote)),
                     z = c(lik))
@@ -482,14 +489,14 @@ p
 ## The Likelihood Function
 
 ```{r, echo = FALSE, fig.align='center', fig.height=4.5, fig.width=5.9, cache = TRUE}
-p + geom_abline(intercept = 0, slope = 1, lwd = 10, 
+p + geom_abline(intercept = 0, slope = 1, lwd = 10,  
              color = "cadetblue", alpha = .4)
 ```
 
 ## Likelihood Function, more data
 
 ```{r, echo = FALSE, fig.align='center', fig.height=4.5, fig.width=5.9, cache = TRUE}
-tab5 <- tab * 5
+tab5 <- tab * 5 
 xyz$z5 <- c(outer(pPromote, pPromote, tab = tab5, FUN = Lfn, loglik = FALSE))
 xyz$z5binned <- cut(xyz$z5, breaks = 9)
 p <- ggplot(xyz) + aes(x = x, y = y, fill = z5binned) +
@@ -506,7 +513,7 @@ p + geom_abline(intercept = 0, slope = 1, lwd = 10,
 ## Likelihood Function, even more data
 
 ```{r, echo = FALSE, fig.align='center', fig.height=4.5, fig.width=5.9, cache = TRUE}
-tab12 <- tab * 12
+tab12 <- tab * 12 
 xyz$z12 <- c(outer(pPromote, pPromote, tab = tab12, FUN = Lfn, loglik = FALSE))
 xyz$z12binned <- cut(xyz$z12, breaks = 9)
 p <- ggplot(xyz) + aes(x = x, y = y, fill = z12binned) +
@@ -521,4 +528,401 @@ p + geom_abline(intercept = 0, slope = 1, lwd = 10,
 ```
 
 #
-# Branch, Bound, & Kill the Likelihood
+
+
+# Learning the Likelihood
+## Technique 1: Hill Climbers
+
+<div class="centered">
+<img src="http://upload.wikimedia.org/wikipedia/commons/9/96/Nelder_Mead2.gif" width="400px" />
+</div>
+
+## Technique 2: Gridded Evaluation
+
+```{r, echo = FALSE, fig.align='center', fig.height=4.5, fig.width=5.9, cache = TRUE}
+pPromote <- seq(0, 1, .05)
+Lfn <- function(pYgM, pYgF, tab, loglik = TRUE) {
+  lik <- dbinom(tab[1, 1], rowSums(tab)[1], pYgM) * dbinom(tab[2, 1], rowSums(tab)[2], pYgF)
+  if (loglik) {
+    return(log(lik))
+  } else {return(lik)}
+  }
+lik <- outer(pPromote, pPromote, tab = tab, FUN = Lfn, loglik = FALSE)
+
+# plot surface in original coordinates
+library(ggplot2); library(RColorBrewer)
+mypal <- colorRampPalette(brewer.pal(9 , "YlOrRd"))
+xyz <- data.frame(x = rep(pPromote, length(pPromote)),
+                    y = rep(pPromote, each = length(pPromote)),
+                    z = c(lik))
+xyz$zbinned <- cut(xyz$z, breaks = 9)
+p <- ggplot(xyz) + aes(x = x, y = y, fill = zbinned) +
+  geom_tile(color = "darkgray") +
+  scale_fill_manual(values = mypal(9), labels = c("low", "", "", "",
+                           "medium", "", "", "", "high"),
+                    guide = guide_legend(reverse=TRUE)) +
+  labs(x = expression(p[male]), y = expression(p[female]), fill = "Likelihood") +
+  theme_bw()
+p
+```
+
+
+## Branch, Bound, & Kill the Likelihood {.build}
+A method to evaluate the likelihood or posterior for a linear mixed model in order to
+
+1. **Profile** the shape of the function for sensible inference
+2. **Estimate** parameters
+
+while being sure that we're not missing the global optimum.
+
+\
+
+**How to calculate bounds?**
+
+## Linear Mixed Models {.build .flexbox .vcenter}
+
+$$
+y = X \beta + Z u + \epsilon
+$$
+
+- $y, X, Z$: data
+- $\beta, u$: fixed and random effects
+
+$$
+\epsilon \sim \textrm{N}(0, R); \quad u \sim \textrm{N}(0, G)
+$$
+
+<hr>
+
+The Restricted Log Likelihood:
+
+$$
+f (\color{red}{\sigma^2_e}, \color{red}{\sigma^2_s}) \propto \sum_{j=1}^m \left[ c_j \log (a_j \color{red}{\sigma^2_s} + b_j \color{red}{\sigma^2_e} ) +  \frac{d_j}{a_j \color{red}{\sigma^2_s} + b_j \color{red}{\sigma^2_e}} \right]
+$$
+
+$$
+\{a_j, b_j, c_j, d_j\} > 0
+$$
+
+## Exploiting the linear structure
+
+$$
+c_j \log(\textrm{linear term}) + \frac{d_j}{\textrm{linear term}}
+$$
+
+```{r log-fxn, fig.height=3.2, fig.width=8}
+x <- 1:6000
+minv <- c(30, 300, 3000)
+maxes <- rep(NA, 3)
+par(mfrow = c(1, 3))
+for(i in 1:3) {
+  fx <- -0.5 * (log(x) + minv[i]/x)
+  plot(x, fx, type = "n", ylab = "f", xlab = "linear term",
+       main = bquote(d[j] ~ "=" ~ .(minv[i])))
+  lines(x, fx, col = "goldenrod", lwd = 2)
+  abline(v = which.max(fx), col = "cadetblue", lwd = 2)
+  maxes[i] <- max(fx)
+}
+```
+
+
+## Exploiting the linear structure {.smaller .build}
+
+$$
+f(\sigma^2_e, \sigma^2_s) \propto \sum_j \left[ c_j \log (a_j \sigma^2_s + b_j \sigma^2_e ) + \frac{d_j}{(a_j \sigma^2_s + b_j \sigma^2_e)} \right]
+$$
+
+\
+<hr>
+Taking derivatives:
+
+$$
+\frac{\partial f(\sigma^2_e, \sigma^2_s)}{\partial \sigma^2_e} \propto \sum_j \frac{a_j (a_j c_j \sigma^2_s + b_j c_j \sigma^2_e - d_j)}{(a_j \sigma^2_s + b_j \sigma^2_e)^2}
+$$
+
+\
+
+\
+
+$$
+\begin{aligned}
+0 &= a_j c_j \sigma^2_s + b_j c_j \sigma^2_e - d_j \\
+\\
+\sigma^2_s &= \frac{d_j}{a_j c_j} - \frac{b_j}{a_j}\sigma^2_e
+\end{aligned}
+$$
+
+
+## Contribution of one term {.smaller .flexbox .vcenter}
+
+```{r heatmap, fig.align='center', fig.height=4.5, fig.width=5.9}
+npix <- 400
+a_j <- 12.9
+b_j <- 1
+c_j <- 1
+d_j <- 5
+x <- seq(0, 57, length.out = npix)
+y <- seq(0, 3, length.out = npix)
+fterm <- function(x, y, a_j, b_j) {
+  linearterm <- a_j * y + b_j * x
+  ifelse(linearterm == 0, NA,
+         -0.5 * (c_j * log(linearterm) + d_j/linearterm))
+}
+z <- outer(x, y, FUN = fterm, a_j = a_j, b_j = b_j)
+xyzdf <- data.frame(x = rep(x, npix),
+                    y = rep(y, each = npix),
+                    z = c(z))
+
+# plot surface in original coordinates
+library(ggplot2); library(RColorBrewer)
+mypal <- colorRampPalette(brewer.pal(9, "YlOrRd"))
+xyzdf$zbinned <- cut(xyzdf$z, breaks = c(-Inf, seq(-2.5, -1.3, length.out = 13)), right = FALSE)
+p <- ggplot(xyzdf) + aes(x = x, y = y, fill = zbinned) +
+  scale_fill_manual(values = mypal(13), labels = c("low", "", "", "", "", "",
+                           "medium", "", "", "", "", "", "high"),
+                    guide = guide_legend(reverse=TRUE)) +
+  labs(x = expression(sigma[e]^2), y = expression(sigma[s]^2), fill = "f") +
+  theme_bw()
+q <- p + geom_tile(alpha = 0) +
+  geom_abline(intercept = d_j / (a_j * c_j), slope = -b_j / a_j, col = "cadetblue", lwd = 1.5)
+q
+```
+
+$a_j = 12.9; \quad b_j = 1; \quad c_j = 1; \quad d_j = 5$
+
+$f$ is maxed along $\sigma^2_s = \frac{d_j}{a_j c_j} - \frac{b_j}{a_j}\sigma^2_e$
+
+
+## Contribution of one term {.smaller .flexbox .vcenter}
+
+```{r heatmap2, fig.align='center', fig.height=4.5, fig.width=5.9}
+q + annotate("point", pch = "+", x = 1, y = .05, size = 13) +
+  annotate("point", pch = "-", x = 7, y = .3, size = 16)
+```
+
+&nbsp;
+
+&nbsp;
+
+## Contribution of one term {.smaller .flexbox .vcenter}
+
+```{r heatmap3, fig.align='center', fig.height=4.5, fig.width=5.9}
+w <- p + geom_tile() + 
+  geom_abline(intercept = d_j / (a_j * c_j), slope = -b_j / a_j, col = "cadetblue", lwd = 1.5)
+w
+```
+
+&nbsp;
+
+&nbsp;
+
+## Box above line {.smaller .flexbox .vcenter}
+
+```{r heatmap4, fig.align='center', fig.height=4.5, fig.width=5.9}
+w + annotate("rect", xmin = 15, xmax = 25, ymin = .65, ymax = 1.2, alpha = .2) 
+```
+
+&nbsp;
+
+&nbsp;
+
+## Box above line {.smaller .flexbox .vcenter}
+
+```{r heatmap5, fig.align='center', fig.height=4.5, fig.width=5.9}
+b1 <- w + annotate("rect", xmin = 15, xmax = 25, ymin = .65, ymax = 1.2, alpha = .2) +
+  annotate("point", x = 15, y = .65) +  
+  annotate("text", x = 17, y = .59, label = "A")
+b1
+```
+
+&nbsp;
+
+&nbsp;
+
+## Box above line {.smaller .flexbox .vcenter}
+
+```{r heatmap6, fig.align='center', fig.height=4.5, fig.width=5.9}
+b2 <- b1 + annotate("point", x = 25, y = 1.2) +  
+  annotate("text", x = 27, y = 1.14, label = "B")
+b2
+```
+
+Bounds on $f$ in box $b_a: \left(f(B), f(A) \right)$
+
+&nbsp;
+
+## Box straddles line {.smaller .flexbox .vcenter}
+
+```{r heatmap6b, fig.align='center', fig.height=4.5, fig.width=5.9}
+b2b <- w + annotate("rect", xmin = 2, xmax = 12, ymin = .1, ymax = .65, alpha = .2)
+b2b 
+```
+
+&nbsp;
+
+&nbsp;
+
+## Box straddles line {.smaller .flexbox .vcenter}
+
+```{r heatmap6c, fig.align='center', fig.height=4.5, fig.width=5.9}
+b2b + annotate("point", x = 2, y = .1) + 
+  annotate("text", x = 0, y = .12, label = "A") +
+  annotate("point", x = 12, y = .65) + 
+  annotate("text", x = 14, y = .59, label = "B") +
+  annotate("point", x = 2, y = .23) +  
+  annotate("text", x = 4, y = .3, label = "C")
+```
+
+Bounds on $f$ in box $b_s: \left(min\left(f(A), f(B)\right), f(C) \right)$
+
+&nbsp;
+
+## Branch for more precision {.smaller .flexbox .vcenter}
+
+```{r heatmap7pre, fig.align='center', fig.height=4.5, fig.width=5.9}
+w + annotate("rect", xmin = 15, xmax = 25, ymin = .65, ymax = 1.2, alpha = .2) 
+```
+
+&nbsp;
+
+&nbsp;
+
+## Branch for more precision {.smaller .flexbox .vcenter}
+
+```{r heatmap7, fig.align='center', fig.height=4.5, fig.width=5.9}
+b3 <- w + annotate("rect", xmin = 15, xmax = 19.5, ymin = .65, ymax = .925 - 0.0275, alpha = .2) +
+  annotate("rect", xmin = 20.5, xmax = 25, ymin = .65, ymax = .925 - 0.0275, alpha = .2) +
+  annotate("rect", xmin = 15, xmax = 19.5, ymin = .925 + 0.0275, ymax = 1.2, alpha = .2) + 
+  annotate("rect", xmin = 20.5, xmax = 25, ymin = .925 + 0.0275, ymax = 1.2, alpha = .2)
+b3
+```
+
+&nbsp;
+
+&nbsp;
+
+## Branch for more precision {.smaller .flexbox .vcenter}
+
+```{r heatmap8, fig.align='center', fig.height=4.5, fig.width=5.9}
+b4 <- b3 + annotate("point", x = 15, y = .65, col = "cadetblue") +
+  annotate("point", x = 20, y = .65, col = "cadetblue") +
+  annotate("point", x = 15, y = .925, col = "cadetblue") + 
+  annotate("point", x = 20, y = .925, col = "cadetblue")
+b4
+```
+
+&nbsp;
+
+&nbsp;
+
+## Branch for more precision {.smaller .flexbox .vcenter}
+
+```{r heatmap9, fig.align='center', fig.height=4.5, fig.width=5.9}
+b4 + annotate("point", x = 20, y = .925, col = "navajowhite") +
+  annotate("point", x = 25, y = .925, col = "navajowhite") +
+  annotate("point", x = 20, y = 1.2, col = "navajowhite") +
+  annotate("point", x = 25, y = 1.2, col = "navajowhite") 
+```
+
+&nbsp;
+
+&nbsp;
+
+## Observations from one term {.build}
+
+> - Each term is maximized along a line in Q1.
+> - Slope < 0 and intercept > 0.
+> - Within $b$ the top-right and bottom-left form the bounds.
+>     - above the line, $\left(f(TR), f(BL)\right)$
+>     - below the line, $\left(f(BL), f(TR)\right)$
+>     - straddle the line, $\left(min(f(TR), f(BL)), f(line)\right)$
+> - For narrower bounds, subdivide $b$ (branch).
+
+## Contribution of two terms {.smaller}
+
+```{r twoterms, fig.align='center', fig.height=4.5, fig.width=5.9}
+w2 <- p + geom_tile(alpha = 0) +
+  annotate("rect", xmin = 15, xmax = 25, ymin = .65, ymax = 1.2, alpha = .2) +
+  annotate("point", x = 25, y = 1.2) + 
+  annotate("text", x = 27, y = 1.14, label = "B") +
+  annotate("point", x = 15, y = .65) +  
+  annotate("text", x = 17, y = .59, label = "A")
+w2 + annotate("text", x = 11, y = .03, label = "j = 1", size = 4) +
+  geom_abline(intercept = d_j / (a_j * c_j), slope = -b_j / a_j, col = "cadetblue", lwd = 1.5)
+```
+
+$$
+j = 1; \quad \left(f_1(B), f_1(A) \right)
+$$
+
+&nbsp;
+
+## Contribution of two terms {.smaller .flexbox .vcenter}
+
+```{r twoterms2, fig.align='center', fig.height=4.5, fig.width=5.9}
+w2 + annotate("text", x = 11, y = .03, label = "j = 1", size = 4, col = "grey") +
+  geom_abline(intercept = d_j / (a_j * c_j), slope = -b_j / a_j, col = "lightgrey", lwd = 1.5) +
+  annotate("text", x = 53, y = .6, size = 4, label = "j = 2") + 
+  geom_abline(intercept = 1.8, slope = -.018, col = "cadetblue", lwd = 1.5)
+```
+
+$$
+j = 1; \quad \left(f_1(B), f_1(A) \right) \\
+j = 2; \quad \left(f_2(A), f_2(B) \right)
+$$
+
+## Contribution of two terms {.smaller .flexbox .vcenter}
+
+```{r twoterms3, fig.align='center', fig.height=4.5, fig.width=5.9}
+w2 + annotate("text", x = 11, y = .03, label = "j = 1", size = 4, col = "grey") +
+  geom_abline(intercept = d_j / (a_j * c_j), slope = -b_j / a_j, col = "lightgrey", lwd = 1.5) +
+  annotate("text", x = 53, y = .6, size = 4, label = "j = 2") +
+  geom_abline(intercept = 1.8, slope = -.018, col = "cadetblue", lwd = 1.5) 
+``` 
+
+
+$$
+ \left.\begin{aligned}
+        j &= 1; \quad \left(f_1(B), f_1(A) \right)\\
+        j &= 2; \quad \left(f_2(A), f_2(B) \right)
+       \end{aligned}
+ \right\}
+ \qquad \underbrace{f_1(B) + f_2(A)}_{L^b}, \underbrace{f_1(A) + f_2(B)}_{U^b}
+$$
+
+## Observations from two terms {.build}
+
+Within box $b$, the bounds on $f$ can be formed by
+
+$$
+L^b \equiv \sum_j L^b_j \\
+U^b \equiv \sum_j U^b_j
+$$
+
+where each term in the sum is $f_j(p)$ evaluated at the appropriate point $p$.
+
+## An algorithm {.build}
+
+To evaluate $f$ arbitrarily well everywhere within active box $B$,
+
+> 1. Specify $\epsilon$.
+> 2. With $y, X, Z$ compute $\{a_j, b_j, c_j, d_j\}$ for all $j$.
+> 3. For every active box $b$
+>  - evaluate $f_j(p)$ for all $j$ to get $L^b, U^b$
+>  - if $U^b - L^b < \epsilon$, make $b$ inactive
+>  - else subdivide $b$ into 4 active boxes and repeat (3).
+
+
+#
+## Unanswered questions {.build}
+
+1. General Algorithm
+    - establish worst-case runtime
+    - more sensible branching
+2. Algorithm on Likelihoods
+    - explore more bounding methods!
+3. Implementation
+    - `data.table()`
+    - bound inheritance
+
+

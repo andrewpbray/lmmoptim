@@ -85,7 +85,7 @@ function(input, output, session) {
                 c(seg_row$L_old, seg_row$L_old, seg_row$U_old, seg_row$U_old),
                 col = COL[4], border = NA)
       }
-      if (input$it %in% seq(2, 24, 3)) { # new kill
+      if (input$it %in% seq(2, 36, 3)) { # new kill
         if (seg_row$active_old + seg_row$active_new == 1) {
           seg_row_end <- m2 %>% filter(membership_old == i) %>% slice(n())
           polygon(c(seg_row$xmin_old, seg_row_end$xmax_old, seg_row_end$xmax_old, seg_row$xmin_old),
@@ -93,7 +93,7 @@ function(input, output, session) {
                   col = COL[5], border = NA)
         }
       }
-      if (input$it %in% seq(3, 24, 3)) { # recent kill
+      if (input$it %in% seq(3, 36, 3)) { # recent kill
         if (seg_row$active_old + seg_row$active_new == 1) {
           seg_row_end <- m2 %>% filter(membership_old == i) %>% slice(n())
           polygon(c(seg_row$xmin_old, seg_row_end$xmax_old, seg_row_end$xmax_old, seg_row$xmin_old),
@@ -102,9 +102,9 @@ function(input, output, session) {
         }
       }
     }
-    lines(d, col = COL[1], lwd = 3)
+    if (input$showLine) {lines(d, col = COL[1], lwd = 3)}
 
-    if (input$it %in% seq(3, 24, 3)) { # branch
+    if (input$it %in% seq(3, 36, 3)) { # branch
       seg_split <- m2$membership_new[!m2$membership_new == m2$membership_old]
       for(i in seg_split) {
         seg_row <- m2 %>% filter(membership_new == i) %>% slice(1)
