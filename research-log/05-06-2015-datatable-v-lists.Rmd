@@ -1,0 +1,10 @@
+---
+title: "List vs DataTable"
+author: "Andrew bray"
+date: "May 7, 2015"
+output: html_document
+---
+
+**Objective:**
+
+Create a small example dataset/model
