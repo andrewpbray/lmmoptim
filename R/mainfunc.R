@@ -39,12 +39,14 @@
 #'   of the algorithm.  Default is 10.
 #' @param ratio a logical indicating if \code{delE} and \code{delS} are specified as
 #'   ZZQ.  Default is \code{FALSE}.
-#' @param lognote a string to append to the "bigcode.out" log file to annotate
+#' @param lognote a string to append to the "log.out" log file to annotate
 #'   the purpose of each run of the algorithm. For use in benchmarking computation
 #'   time. Default is \code{"summary"}.
 #'
-#' @return a list of boxes including their limits in \eqn{\sigma^2_e} and
-#'   \eqn{\sigma^2_e} as well as their bounds.
+#' @return A list of boxes including their limits in \eqn{\sigma^2_e} and
+#'   \eqn{\sigma^2_e} as well as their bounds. Running this function also results
+#'   in the creation of a log file called "log.out" containing box counts at every
+#'   iteration.
 
 fitlmm <- function(lines, startbox, eps = 0, delE = 0, delS = 0, M = Inf, maxit = 10,
                    ratio = FALSE, lognote = "summary") {
@@ -108,7 +110,7 @@ fitlmm <- function(lines, startbox, eps = 0, delE = 0, delS = 0, M = Inf, maxit 
 
         iter <- iter + 1
         write(c("iteration", iter, "nact", nact, "ninact", ninact, "lowbound",
-            lowbound), file = "bigcode.out", ncolumns = 8, append = TRUE)
+            lowbound), file = "log.out", ncolumns = 8, append = TRUE)
     }
 
 
@@ -118,6 +120,6 @@ fitlmm <- function(lines, startbox, eps = 0, delE = 0, delS = 0, M = Inf, maxit 
         rll.lower = 0.1, rll.upper = 0.1)))
     end_time <- Sys.time()
     write(paste(lognote, "runtime: ", round(end_time - start_time, digits = 3)),
-          file = "bigcode.out", ncolumns = 1, append = TRUE)
+          file = "log.out", ncolumns = 1, append = TRUE)
     return(data.frame(tmp))
 }
