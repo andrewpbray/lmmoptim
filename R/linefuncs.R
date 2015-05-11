@@ -1,8 +1,18 @@
-# Given X, Z, Y, find the constants in Hodges' reexpression
+#' Find the constants that define each line.
+#'
+#' Given X, Y, Z, find the constants {a_j, b_j, c_j, d_j} that define the shape
+#' of each term in the sum.
+#'
+#' @param x a matrix with n rows corresponding to the fixed effects.
+#' @param z a matrix with n rows corresponding to the random effects.
+#' @param y a numeric vector of length n.
+#' @param SigE an n x n covariance matrix for the random error.
+#' @param SigS an n x n covariance matrix for the random effects.
+#'
+#' @return A dataframe of containing the constants that define the shape of each
+#'   term in the sum
 
 findlines <- function(x, z, y, SigE, SigS) {
-    # Find the constants in Hodges' reexpression.  Just those constants related
-    # to the model, not the prior.  sanity checks
     if (!is.matrix(x))
         print("x should be a matrix")
     if (!is.matrix(z))

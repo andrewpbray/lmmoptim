@@ -12,7 +12,7 @@ mod <- lme(indPrem ~ 1, data = hmo, random = ~1 | state, control = list(apVar=TR
 summary(mod)
 
 # random intercept model
-y <- hmobig$indPrem
+y <- hmo$indPrem
 n <- length(y)
 mod <- lm(indPrem ~ state, data = hmo, x = TRUE)
 x <- mod$x[, 1, drop = FALSE]
@@ -36,18 +36,18 @@ mlrebox <- with(lines,
 boxes <- fitlmm(lines = lines, mlrebox, eps = 1, delE = 10, delS = 10, M = 5, maxit = 10)
 p <- showboxes(boxes)
 
-pdf("hmoboxes.pdf")
+pdf("manuscript/figs/hmoboxes.pdf")
 p + theme_bw()
 dev.off()
-jpeg("hmoboxes.jpg")
+jpeg("manuscript/figs/hmoboxes.jpg")
 p + theme_bw()
 dev.off()
 
 p <- showfunc(boxes)
-pdf("hmorll.pdf")
+pdf("manuscript/figs/hmorll.pdf")
 p + scale_x_log10 () + scale_y_log10 () + theme_bw()
 dev.off()
-jpeg("hmorll.jpg")
+jpeg("manuscript/figs/hmorll.jpg")
 p + scale_x_log10 () + scale_y_log10 () + theme_bw()
 dev.off()
 
@@ -66,18 +66,18 @@ boxes2 <- fitlmm(lines = lines, box2, eps = .5, delE = 0, delS = 0, ratio = TRUE
 mrle <- which.max(boxes2$rll.lower)
 
 p <- showboxes(boxes2)
-pdf("hmoboxes2.pdf")
+pdf("manuscript/figs/hmoboxes2.pdf")
 p + theme_bw()# + scale_x_log10 () + scale_y_log10 ()
 dev.off()
-jpeg("hmoboxes2.jpeg")
+jpeg("manuscript/figs/hmoboxes2.jpeg")
 p + theme_bw()# + scale_x_log10 () + scale_y_log10 ()
 dev.off()
 
 p <- showfunc(boxes2)
-pdf("hmorll2.pdf")
+pdf("manuscript/figs/hmorll2.pdf")
 p + scale_x_log10 () + scale_y_log10 () + theme_bw()
 dev.off()
-jpeg("hmorll2.jpeg")
+jpeg("manuscript/figs/hmorll2.jpeg")
 p + scale_x_log10 () + scale_y_log10 () + theme_bw()
 dev.off()
 
@@ -90,6 +90,8 @@ p + scale_x_log10(limits = c(200, 1000),
                 name = expression(sigma^2[s])
                 ) +
   theme_bw()
+
+save.image()
 
 # model 2, with some fixed effects
 # random intercept model
@@ -112,7 +114,7 @@ summary(mod)
 
 lines <- findlines(x, z, y, SigE, SigS)
 
-pdf("hmolines.HH11.pdf")
+pdf("manuscript/figs/hmolines.HH11.pdf")
 showlines(lines)
 dev.off()
 
@@ -128,14 +130,14 @@ boxes.HH11 <- fitlmm(lines = lines, mlrebox, eps = 5,
                      M = 5, maxit = 10
                      )
 p <- showboxes(boxes.HH11)
-pdf("hmo.HH11.boxes.pdf")
+pdf("manuscript/figs/hmo.HH11.boxes.pdf")
 p + scale_x_continuous(name = expression(sigma[e]^2)) +
     scale_y_continuous(name = expression(sigma[s]^2)) +
     theme_bw()
 dev.off()
 
 p <- showfunc(boxes.HH11)
-pdf("hmo.HH11.rll.pdf")
+pdf("manuscript/figs/hmo.HH11.rll.pdf")
 p + scale_x_log10(name = expression(sigma[e]^2),
                   breaks = c(100,300,1000,3000,10000)
                   ) +
@@ -157,14 +159,14 @@ box2 <- with(lines,
 boxes.HH11 <- fitlmm(lines = lines, box2, eps = 1, M = 10, maxit = 15)
 
 p <- showboxes(boxes.HH11)
-pdf("hmo.HH11.boxes2.pdf")
+pdf("manuscript/figs/hmo.HH11.boxes2.pdf")
 p + scale_x_continuous(name = expression(sigma[e]^2), limits = c(300, 1000)) +
     scale_y_continuous(name = expression(sigma[s]^2)) +
     theme_bw()
 dev.off()
 
 p <- showfunc(boxes.HH11)
-pdf("hmo.HH11.rll2.pdf")
+pdf("manuscript/figs/hmo.HH11.rll2.pdf")
 p + scale_x_log10(name = expression(sigma[e]^2),
                   breaks = c (300,500,1000)
                   ) +
@@ -176,21 +178,21 @@ dev.off()
 
 # Bayesian analysis using Hodges 1998 prior
 lines <- addprior(lines, a.E = 1, b.E = 0, a.S = 1.1, b.S = .1)
-pdf("hmolines.HH11.Bayes.pdf")
+pdf("manuscript/figs/hmolines.HH11.Bayes.pdf")
 showlines(lines)
 dev.off()
 
 boxes.HH11Bayes <- fitlmm(lines = lines, box2, eps = 1, M = 10, maxit = 20)
 
 p <- showboxes(boxes.HH11Bayes)
-jpeg("hmo_HH11Bayes_boxes.jpg")
+jpeg("manuscript/figs/hmo_HH11Bayes_boxes.jpg")
 p + scale_x_continuous(name = expression(sigma[e]^2), limits = c(300, 1000)) +
     scale_y_continuous(name = expression(sigma[s]^2)) +
     theme_bw()
 dev.off()
 
 p <- showfunc(boxes.HH11Bayes)
-jpeg("hmo_HH11Bayes_rll.jpg")
+jpeg("manuscript/figs/hmo_HH11Bayes_rll.jpg")
 p + scale_x_log10(name = expression(sigma[e]^2),
                   breaks = c(300, 500, 1000)
                   ) +
@@ -215,3 +217,6 @@ tmp <- seq(0, .1, length = 1000)
 tmp2 <- dinvgamma(tmp, shape = 1.1, rate = 0.1)
 plot(tmp, tmp2, type = "l")
 abline(v = 0.04761905)
+
+save.image()
+
