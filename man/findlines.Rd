@@ -19,7 +19,7 @@ findlines(x, z, y, SigE, SigS)
 }
 \value{
 A dataframe of containing the constants that define the shape of each
-  term in the sum
+  term in the sum.
 }
 \description{
 Given X, Y, Z, find the constants {a_j, b_j, c_j, d_j} that define the shape

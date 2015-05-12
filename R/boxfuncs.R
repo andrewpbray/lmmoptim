@@ -1,9 +1,29 @@
-# When dividing the plane into boxes, a box should have the following
-# attributes: xlims=sigsqelims, ylims=sigsqslims for each line, an indicator
-# of whether the box is above, below, or straddling the line for each line,
-# upper and lower bounds on RLL
+#' Make a box with bounds
+#'
+#' Given the limits of the box, calculate its status relative to each line and
+#' calculate the bounds on the objective function within that box.
+#'
+#' @param lims.sigsqe numeric vector of length 2 of the form \code{c(lower, upper)}
+#'   containing the x-limits of the box.
+#' @param lims.sigsqs numeric vector of length 2 of the form \code{c(lower, upper)}.
+#'   containing the y-limits of the box.
+#' @param status factor of length of \code{lines} denoting the location of the box
+#'   relative to each line. If the box has a parent, these correspond to the status
+#'   of that parent. The levels are \{above, below, straddle\}.
+#' @param lines dataframe containing the constants that define the shape of each
+#'   term in the sum. Output from \code{\link{findlines}}.
+#'
+#' @return A list containing:
+#' \itemize{
+#'   \item limits of the box in \eqn{\sigma^2_e} (numeric vector of length 2)
+#'   \item limits of the box in \eqn{\sigma^2_s} (numeric vector of length 2)
+#'   \item the status of the box relative to each line (factor of length of the
+#'   number of terms in the sum)
+#'   \item the bounds on the objective function (numeric vector of length 2 of
+#'   the form \code{c(lower, upper)})
+#'   }
 
-makebox <- function(lims.sigsqs = NA, lims.sigsqe = NA, status = NA, lines) {
+makebox <- function(lims.sigsqe = NA, lims.sigsqs = NA, status = NA, lines) {
 
     # sanity checks
     if (missing(lims.sigsqs) || missing(lims.sigsqe))
@@ -27,7 +47,19 @@ makebox <- function(lims.sigsqs = NA, lims.sigsqe = NA, status = NA, lines) {
 
     return(list(lims.sigsqe = lims.sigsqe, lims.sigsqs = lims.sigsqs, status = status,
         bounds = colSums(bounds)))
-}  # end makebox
+}
+
+#' Split a parent box into 4 children.
+#'
+#' Split a parent box into four equally sized boxes as part of the branching part
+#' of the algorithm.
+#'
+#' @param box list containing the properties of a parent box. Created as output
+#'   from \code{\link{makebox}}.
+#' @param lines dataframe containing the constants that define the shape of each
+#'   term in the sum. Output from \code{\link{findlines}}.
+#'
+#' @return a list of the four child boxes.
 
 splitbox <- function(box, lines) {
     # split a box into four children
@@ -43,8 +75,23 @@ splitbox <- function(box, lines) {
     SE <- with(box, makebox(lims.sigsqe = c(mean(lims.sigsqe), lims.sigsqe[2]),
         lims.sigsqs = c(lims.sigsqs[1], mean(lims.sigsqs)), status = status,
         lines = lines))
-    return(list(NW, NE, SW, SE))  # list of four boxes
+    return(list(NW, NE, SW, SE))
 }
+
+#' Get the location of a box relative to lines.
+#'
+#' Computes the location of a box with given limits relative to each of
+#' the lines.
+#'
+#' @param lims.sigsqe numeric vector of length 2 of the form \code{c(lower, upper)}
+#'   containing the x-limits of the box.
+#' @param lims.sigsqs numeric vector of length 2 of the form \code{c(lower, upper)}
+#'   containing the y-limits of the box.
+#' @param lines dataframe containing the constants that define the shape of each
+#'   term in the sum. Output from \code{\link{findlines}}.
+#'
+#' @return A factor of length of \code{lines} denoting the location of the box
+#'   relative to each line.
 
 getstatus <- function(lims.sigsqe, lims.sigsqs, lines) {
     # Is a box above, below, or straddling the lines with these slopes and
@@ -65,6 +112,25 @@ getstatus <- function(lims.sigsqe, lims.sigsqs, lines) {
 
     return(status)
 }
+
+#' Get bounds for a given box
+#'
+#' Computes the lower and upper bounds on every term in the sum of
+#' the objective function within a box.
+#'
+#' @param lims.sigsqe numeric vector of length 2 of the form \code{c(lower, upper)}
+#'   containing the x-limits of the box.
+#' @param lims.sigsqs numeric vector of length 2 of the form \code{c(lower, upper)}
+#'   containing the y-limits of the box.
+#' @param lines dataframe containing the constants that define the shape of each
+#'   term in the sum. Output from \code{\link{findlines}}.
+#' @param status factor of length of \code{lines} denoting the location of the box
+#'   relative to each line.
+#'
+#' @return A matrix with a row corresponding each term in the sum. The first column
+#' contains the lower bound of that term within the box and the second column
+#' contains the upper bound. Note that the \code{colSums} of this matrix yields the
+#' \code{c(lower, upper)} bounds on the full objective function.
 
 getbounds <- function(lims.sigsqe, lims.sigsqs, lines, status) {
     # small sanity check
@@ -95,10 +161,6 @@ getbounds <- function(lims.sigsqe, lims.sigsqs, lines, status) {
     bounds[strad, 1] <- pmin(eval.ur[strad], eval.ll[strad])
     # for the upper bound, we can evaluate anywhere on the line, so we might as
     # well evaluate at (int.sigsqe,0)
-    #bounds[strad, 2] <- with(lines-0.5 * (multiplier.log * log(int.sigsqe) + multiplier.inv/int.sigsqe)
-    #bounds[is.na(lines$int.sigsqe)] <- with(lines[is.na(lines$int.sigsqe)],
-     #                                       -0.5 * (multiplier.log * log(int.sigsqs) +
-      #                                                multiplier.inv/int.sigsqs))
     bounds[strad, 2] <- with(lines[strad, ], ifelse(is.na(int.sigsqe), -0.5 *
        (multiplier.log * log(int.sigsqs) + multiplier.inv/int.sigsqs), -0.5 *
        (multiplier.log * log(int.sigsqe) + multiplier.inv/int.sigsqe)))

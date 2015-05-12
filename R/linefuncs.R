@@ -10,7 +10,7 @@
 #' @param SigS an n x n covariance matrix for the random effects.
 #'
 #' @return A dataframe of containing the constants that define the shape of each
-#'   term in the sum
+#'   term in the sum.
 
 findlines <- function(x, z, y, SigE, SigS) {
     if (!is.matrix(x))
