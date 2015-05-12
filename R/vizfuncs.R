@@ -7,7 +7,6 @@
 #'   term in the sum. Output from \code{\link{findlines}}.
 
 showlines <- function(lines) {
-  requireNamespace("ggplot2", quietly = TRUE)
   p <- ggplot(subset(lines, is.finite(slope) & slope < 0),
               aes(x = int.sigsqe, y = 0, xend = 0, yend = int.sigsqs)) +
     xlab(expression(sigma[e]^2)) +
@@ -32,7 +31,6 @@ showlines <- function(lines) {
 #' @param box a list of boxes, usually output from \code{\link{fitlmm}}.
 
 showboxes <- function(boxes) {
-  requireNamespace("ggplot2", quietly = TRUE)
   p <- ggplot(boxes, aes(xmin = sigsqe.lo, xmax = sigsqe.hi,
                          ymin = sigsqs.lo, ymax = sigsqs.hi))
   p + geom_rect(color = "black", fill = "white") + xlab("Sigma_e^2") + ylab("Sigma_s^2")
@@ -53,7 +51,6 @@ showboxes <- function(boxes) {
 #'   \code{\link{fitlmm}}.
 
 showfunc <- function(boxes) {
-  requireNamespace("ggplot2", quietly = TRUE)
   mle <- which.max(boxes$rll.lower)
   mle.val <- boxes$rll.lower[mle]
   hi <- which(boxes$rll.upper > mle.val)
