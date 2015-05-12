@@ -1,11 +1,9 @@
 # global mean surface temperature
 
-source("linefuncs.R")
-source("boxfuncs.R")
-source("utils.R")
-source("mainfunc.R")
-source("vizfuncs.R")
 library(nlme) # for the standard analysis, by REML
+library(devtools)
+devtools::install_github("andrewpbray/lmmoptim")
+library("lmmoptim")
 
 datadir <- "/Users/michael/research/Mixed Models/data" # read the gmst data
 gmst <- read.csv ( paste(datadir,"/gmst.csv", sep="") )
