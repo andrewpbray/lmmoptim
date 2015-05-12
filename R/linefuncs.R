@@ -86,22 +86,46 @@ findlines <- function(x, z, y, SigE, SigS) {
     return(lines)
 }
 
+#' Add a prior to the RLL
+#'
+#' Modifies the \code{lines} dataframe that is output from the
+#' \code{\link{findlines}} function to add a term corresponding to the
+#' prior for use in a Bayesian analysis.
+#'
+#' Working with the posterior density of \eqn{\sigma^2_e, \sigma^2_e} instead
+#' of the RLL requires this incorporation of a prior distribution on those same
+#' parameters. We work here with the inverse Gamma, which is the conjugate prior,
+#' \enumerate{
+#'  \item \eqn{\sigma^2_e ~ IG(\alpha_e, \beta_e)}
+#'  \item \eqn{\sigma^2_s ~ IG(\alpha_s, \beta_s)}
+#'  }
+#' Given a dataframe output from \code{findlines},
+#'
+#' @param alpha_e a positive numeric. The shape parameter for the IG prior on
+#'   \eqn{\sigma^2_e}.
+#' @param beta_e a positive numeric. The scale parameter for the IG prior on
+#'   \eqn{\sigma^2_e}.
+#' @param alpha_s a positive numeric. The shape parameter for the IG prior on
+#'   \eqn{\sigma^2_s}.
+#' @param beta_s a positive numeric. The scale parameter for the IG prior on
+#'   \eqn{\sigma^2_s}.
+#'
+#' @return Returns a new \code{lines} dataframe with the constants associated
+#' with the prior term appended to the bottom.
 
-addprior <- function(lines, a.E = 0, b.E = 0, a.S = 0, b.S = 0) {
-    if ((a.E != 0) || (b.E != 0)) {
-        # if sigesq ~ IG(a.E,b.E)
+addprior <- function(lines, alpha_e = 0, beta_e = 0, alpha_s = 0, beta_s = 0) {
+    if ((alpha_e != 0) || (beta_e != 0)) {
         vert <- which(lines$slope == -Inf)
-        lines$multiplier.log[vert] <- lines$multiplier.log[vert] + 2 * (a.E +
+        lines$multiplier.log[vert] <- lines$multiplier.log[vert] + 2 * (alpha_e +
             1)
-        lines$multiplier.inv[vert] <- lines$multiplier.inv[vert] + b.E
+        lines$multiplier.inv[vert] <- lines$multiplier.inv[vert] + beta_e
         lines$v[vert] <- sqrt(lines$multiplier.inv[vert])
         lines$int.sigsqe[vert] <- lines$multiplier.inv[vert]/lines$multiplier.log[vert]
     }
-    if ((a.S != 0) || (b.S != 0)) {
-        # if sigssq ~ IG(a.S,b.S)
-        horiz <- data.frame(a = 1, multiplier.inv = 2 * b.S, multiplier.log = 2 *
-            (a.S + 1), v = sqrt(2 * b.S), int.sigsqs = b.S/(a.S + 1), int.sigsqe = NA,
-            slope = 0, b = 0)
+    if ((alpha_s != 0) || (beta_s != 0)) {
+        horiz <- data.frame(a = 1, multiplier.inv = 2 * beta_s, multiplier.log = 2 *
+            (alpha_s + 1), v = sqrt(2 * beta_s), int.sigsqs = beta_s/(alpha_s + 1),
+            int.sigsqe = NA, slope = 0, b = 0)
         lines <- rbind(lines, horiz)
     }
     return(lines)
