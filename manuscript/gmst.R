@@ -5,44 +5,43 @@ library(devtools)
 devtools::install_github("andrewpbray/lmmoptim")
 library("lmmoptim")
 
-datadir <- "/Users/michael/research/Mixed Models/data" # read the gmst data
-gmst <- read.csv ( paste(datadir,"/gmst.csv", sep="") )
-y <- with ( gmst, temp.dev )
+data(gmst)
+y <- gmst$temp.dev
 
 # plot the data
 pdf("gmst-scatter.pdf")
-p <- ggplot ( data=gmst, aes(x=Year, y=temp.dev) ) + geom_point()
+p <- ggplot(data = gmst, aes(x = Year, y = temp.dev)) + geom_point()
 p + ylab("temperature deviation") + theme_bw()
 dev.off()
 
 # Hodges' code for centered X, Z, GamX, GamZ
 x <- 1:125
 xs <- (x - mean(x))/sqrt(var(x))
-X <- matrix(c(rep(1,125),xs,xs^2),125,3)
-knots <- seq(4,121,4)
+X <- matrix(c(rep(1, 125), xs, xs^2), 125, 3)
+knots <- seq(4, 121, 4)
 ks <- (knots - mean(x))/sqrt(var(x))
-kp <- matrix(0==1,125,30)
-for (i in 1:30){for (j in 1:125){kp[j,i] <- xs[j] >= ks[i]}}
-Z <- kp * (matrix(xs,125,30) - matrix(ks,125,30,byrow=T))^2
+kp <- matrix(0 == 1, 125, 30)
+for (i in 1:30) {
+  for (j in 1:125) {
+    kp[j, i] <- xs[j] >= ks[i]
+    }
+  }
+Z <- kp * (matrix(xs, 125, 30) - matrix(ks, 125, 30, byrow = T))^2
 GX <- svd(X)$u
 CX <- t(svd(cbind(X,Z))$u) %*% GX
-QCX <- diag(rep(1,33)) - CX %*% solve(t(CX) %*% CX) %*% t(CX)
-CZ <- eigen(QCX,sym=T)$vec[,1:30]
-GZ <- svd(cbind(X,Z))$u %*% CZ
+QCX <- diag(rep(1, 33)) - CX %*% solve(t(CX) %*% CX) %*% t(CX)
+CZ <- eigen(QCX, sym = T)$vec[, 1:30]
+GZ <- svd(cbind(X, Z))$u %*% CZ
 x <- X
 z <- Z
 
-
-
- # Lavine's code for uncentered  X, Z, GamX, GamZ
-yr <- with ( gmst, Year )
+# Lavine's code for uncentered  X, Z, GamX, GamZ
+yr <- gmst$year
 nyr <- length(yr)
-yrdev <- yr-mean(yr)
-knots <- 1880 + seq ( 4, 120, by=4 )
-x <- cbind ( rep(1,nyr), yr, yr^2 )
+knots <- 1880 + seq(4, 120, by = 4)
+x <- cbind(rep(1, nyr), yr, yr^2)
 # x <- cbind ( rep(1,nyr), scale ( x[,-1] ) ) # either use either this line or not.  it shouldn't matter
-z <- pmax ( outer ( yr, knots, "-" ), 0 )^2
-
+z <- pmax(outer(yr, knots, "-" ), 0)^2
 
 # Compute H_ZZ and PDP';  Compute D and canon regressors GZ P
 
@@ -80,9 +79,10 @@ z <- pmax ( outer ( yr, knots, "-" ), 0 )^2
 # summary(mod)
 
 # find lines
+y <- gmst$temp.dev
 SigE <- diag(length(y))
 SigS <- diag(length(knots))
-lines <- findlines ( x, z, y, SigE, SigS )
+lines <- findlines(x, z, y, SigE, SigS)
 
 # plot the lines
 pdf("gmst-lines.pdf")
@@ -92,56 +92,47 @@ dev.off()
 # To find the MRLE the initial box is determined by the maxima of the x- and y-intercepts
 
 # fit the model
-boxes <- fitlmm ( lines=lines, eps=10, delE=1, delS=1, M=10, maxit=15 ) # first try
+boxes <- fitlmm(lines = lines, eps = 10, delE = 1, delS = 1, M = 10, maxit = 15) # first try
 
 # view the boxes
 pdf("gmst-boxes1.pdf")
-p <- showboxes (boxes)
-p + scale_x_continuous ( name = expression(sigma[e]^2) ) +
-    scale_y_continuous ( name = expression(sigma[s]^2) ) +
+p <- showboxes(boxes)
+p + scale_x_continuous(name = expression(sigma[e]^2)) +
+    scale_y_continuous(name = expression(sigma[s]^2)) +
     theme_bw()
 dev.off()
 
 p <- showfunc(boxes)
-pdf ( "gmst-rll1.pdf" )
-p + scale_x_log10 ( name = expression(sigma[e]^2),
-                         breaks = c(30,300,3000)
-                       ) +
-    scale_y_log10 ( name = expression(sigma[s]^2),
-                         breaks = c(10,1000, 100000, 10000000)
-                       ) +
+pdf("gmst-rll1.pdf")
+p + scale_x_log10(name = expression(sigma[e]^2),
+                  breaks = c(30, 300, 3000)) +
+    scale_y_log10(name = expression(sigma[s]^2),
+                  breaks = c(10, 1000, 100000, 10000000)) +
     theme_bw()
 dev.off()
 
 # after the first try we can narrow down the search region
+startbox <- makebox(lines = lines,
+	                  lims.sigsqe = c(50, 500),
+                    lims.sigsqs = c(0, 1000000),
+	                  status = rep("straddle", nrow(lines)))
 
-startbox <- makebox ( lines = lines,
-	                  lims.sigsqe = c ( 50, 500 ),
-                      lims.sigsqs = c ( 0, 1000000 ),
-	                  status = rep ( "straddle", nrow(lines) )
-	                )
-
-boxes <- fitlmm ( lines=lines, startbox=startbox, eps=2, M=10, maxit=20,
-                  delE=0, delS=0
-                )
+boxes <- fitlmm(lines = lines, startbox = startbox, eps = 2, M = 10, maxit = 20,
+                delE = 0, delS = 0)
 
 # view the boxes
 jpeg("gmst-boxes2.jpg")
-p <- showboxes (boxes)
-p + scale_x_continuous ( name = expression(sigma[e]^2) ) +
-    scale_y_continuous ( name = expression(sigma[s]^2) ) +
+p <- showboxes(boxes)
+p + scale_x_continuous(name = expression(sigma[e]^2)) +
+    scale_y_continuous(name = expression(sigma[s]^2)) +
     theme_bw()
 dev.off()
 
-jpeg ( "gmst-rll2.jpg" )
+jpeg("gmst-rll2.jpg")
 p <- showfunc(boxes)
-p + scale_x_log10 ( name = expression(sigma[e]^2),
-                         breaks = c(30, 100, 300)
-                       ) +
-    scale_y_log10 ( name = expression(sigma[s]^2),
-                         breaks = c(1,10,100,1000,10000,100000)
-                       ) +
+p + scale_x_log10(name = expression(sigma[e]^2),
+                  breaks = c(30, 100, 300)) +
+    scale_y_log10(name = expression(sigma[s]^2),
+                  breaks = c(1, 10, 100, 1000, 10000, 100000)) +
     theme_bw()
 dev.off()
-
-
