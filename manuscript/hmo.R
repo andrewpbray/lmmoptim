@@ -1,5 +1,4 @@
 # HMO Example
-library(ggplot2)
 library(dplyr)
 library(nlme) # the standard analysis, by REML
 library(devtools)
