@@ -11,10 +11,9 @@ Description: An implementation of the optimization algorithm described in,
     global min/max of the restricted likelihood of linear mixed models with two
     variances. Also included are functions to visualize the likelihood function
     and the optimization process.
-Depends: R (>= 3.1.2)
+Depends: R (>= 3.1.2),
+         ggplot2
 License: GPL-2
 LazyData: true
-Imports:
-    ggplot2
 URL: http://github.com/andrewpbray/lmmoptim
 BugReports: http://github.com/andrewpbray/lmmoptim/issues
