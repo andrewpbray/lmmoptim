@@ -134,14 +134,14 @@ getstatus <- function(lims.sigsqe, lims.sigsqs, lines) {
 
 getbounds <- function(lims.sigsqe, lims.sigsqs, lines, status) {
     # small sanity check
-    if (missing(lims.sigsqe) || missing(lims.sigsqs))
-        print("Please supply lims.sigsqe and lims.sigsqs")
-    if (missing(lines))
-        print("Please supply lines")
-    if (missing(status))
-        print("Please supply status")
-    if (length(status) != nrow(lines))
-        print("length(status) != nrow(lines)")
+#     if (missing(lims.sigsqe) || missing(lims.sigsqs))
+#         print("Please supply lims.sigsqe and lims.sigsqs")
+#     if (missing(lines))
+#         print("Please supply lines")
+#     if (missing(status))
+#         print("Please supply status")
+#     if (length(status) != nrow(lines))
+#         print("length(status) != nrow(lines)")
 
     # evaluate each line at the upper-right corner of the box
     ur <- with(lines, a * lims.sigsqs[2] + b * lims.sigsqe[2])
