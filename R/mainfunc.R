@@ -86,12 +86,12 @@ fitlmm <- function(lines, startbox, eps = 0, delE = 0, delS = 0, M = Inf, maxit 
     }
 
     while (nact > 0 && iter < maxit) {
-        # Find the lower bound of each box and the maximum of the lower bounds.  For
-        # each active box, either make it inactive or divide it.
+        # get new global highest lower bound
         low.act <- max(vapply(X = active, FUN = function(box) {
             box$bounds[1]
         }, FUN.VALUE = 0.1))
         lowbound <- max(lowbound, low.act)
+        # look at active list for boxes to be killed. return logical vector to kill
         kill <- vapply(X = active, FUN = killfunc, FUN.VALUE = TRUE, lb = lowbound,
             M = M, eps = eps, delE - delE, delS = delS, ratio = ratio)
         nkill <- sum(kill)
@@ -100,6 +100,7 @@ fitlmm <- function(lines, startbox, eps = 0, delE = 0, delS = 0, M = Inf, maxit 
         }
         ninact <- length(inactive)
         kids <- list()
+        length(kids) <- sum(!kill)
         nkids <- 0
         for (i in which(!kill)) {
             kids[(nkids + 1):(nkids + 4)] <- splitbox(active[[i]], lines)  # boxes are split into 4 parts
