@@ -79,12 +79,10 @@ findlines <- function(x, z, y, SigE, SigS) {
         print("length(v) != sz")
     rss <- sum(resid(lm(y ~ cbind(Gamx, Gamz)))^2)
 
-    lines <- matrix(c(c(a, 0), c(v, sqrt(rss)), c(v^2/a, NA),
-                      c(v^2, rss/(n - (sx + sz))), c(-1/a, -Inf),
-                      c(rep(1, sz), n - (sx + sz)), c(v^2, rss),
-                      rep(1, length(a) + 1)), ncol = 8)
-    colnames(lines) <- c("a", "v", "int.sigsqs", "int.sigsqe", "slope",
-                         "multiplier.log", "multiplier.inv", "b")
+    lines <- data.frame(a = c(a, 0), v = c(v, sqrt(rss)), int.sigsqs = c(v^2/a, NA),
+                        int.sigsqe = c(v^2, rss/(n - (sx + sz))), slope = c(-1/a, -Inf),
+                        multiplier.log = c(rep(1, sz), n - (sx + sz)),
+                        multiplier.inv = c(v^2, rss), b = 1)
 
     return(lines)
 }
