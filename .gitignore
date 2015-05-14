@@ -1,3 +1,6 @@
 .Rproj.user
 .Rhistory
 .RData
+lmmoptim.Rproj
+.Rbuildignore
+.DS_Store
