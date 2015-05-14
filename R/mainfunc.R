@@ -100,7 +100,7 @@ fitlmm <- function(lines, startbox, eps = 0, delE = 0, delS = 0, M = Inf, maxit 
         }
         ninact <- length(inactive)
         kids <- list()
-        length(kids) <- sum(!kill)
+        length(kids) <- sum(!kill) * 4
         nkids <- 0
         for (i in which(!kill)) {
             kids[(nkids + 1):(nkids + 4)] <- splitbox(active[[i]], lines)  # boxes are split into 4 parts
