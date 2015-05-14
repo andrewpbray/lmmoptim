@@ -81,8 +81,8 @@ findlines <- function(x, z, y, SigE, SigS) {
 
     lines <- matrix(c(c(a, 0), c(v, sqrt(rss)), c(v^2/a, NA),
                       c(v^2, rss/(n - (sx + sz))), c(-1/a, -Inf),
-                      c(rep(1, sz), n - (sx + sz)), c(v^2, rss), b = 1),
-                    ncol = 8)
+                      c(rep(1, sz), n - (sx + sz)), c(v^2, rss),
+                      rep(1, length(a) + 1)), ncol = 8)
     colnames(lines) <- c("a", "v", "int.sigsqs", "int.sigsqe", "slope",
                          "multiplier.log", "multiplier.inv", "b")
 
