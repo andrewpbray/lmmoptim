@@ -5,6 +5,27 @@ date: "May 7, 2015"
 output: html_document
 ---
 
-**Objective:**
+## Todo
 
-Create a small example dataset/model
+1. Write general pseudocode.
+4. Lay out proof that bounds will go to true value (sandwich, continuity,
+how general can this proof be made?).
+5. Re-run figures and verify the second mode.
+
+```{r colevalsNA}
+library(microbenchmark)
+x <- matrix(rnorm(1e5), ncol = 5, byrow = TRUE)
+microbenchmark(x[x[, 1] + x[, 2] < x[, 3], 5] <- 0)
+
+y <- matrix(c(rnorm(1e5), rep(NA, 1e6)), ncol = 5, byrow = TRUE)
+microbenchmark(y[y[, 1] + y[, 2] < y[, 3], 5] <- 0)
+```
+
+**SET** epsilon
+create data structure
+
+**WHILE** there are still active boxes
+  Bound new boxes
+  **IF** Bounds
+
+- addprior: sensible defaults for the alpha/beta params?
