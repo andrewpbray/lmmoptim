@@ -1,6 +1,34 @@
 ---
-title: "Test Algorithm for Correctness"
+title: "Explore algorithm divergence"
 author: "Andrew bray"
 date: "May 18, 2015"
 output: html_document
 ---
+
+```{r tester, message = FALSE, error = FALSE, fig.align="center", fig.width=6, fig.height=6}
+# HMO Example
+library(dplyr)
+library(nlme) # the standard analysis, by REML
+library(devtools)
+devtools::install_github("andrewpbray/lmmoptim")
+library("lmmoptim")
+
+data(hmo)
+
+# mod <- lme(indPrem ~ 1, data = hmo, random = ~1 | state, control = list(apVar=TRUE))
+# summary(mod)
+
+# random intercept model
+y <- hmo$indPrem
+n <- length(y)
+mod <- lm(indPrem ~ state, data = hmo, x = TRUE)
+x <- mod$x[, 1, drop = FALSE]
+z <- mod$x[, -1, drop = FALSE]
+SigE <- diag(n)
+SigS <- diag(44)
+
+lines <- findlines(x, z, y, SigE, SigS)
+
+showlines(lines)
+```
+
