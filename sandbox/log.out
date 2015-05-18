@@ -1,0 +1,270 @@
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.215
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.09
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.138
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.118
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.113
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.124
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.132
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.139
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.105
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.174
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.182
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.088
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.257
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.212
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.126
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.207
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.176
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.336
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.253
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.19
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.155
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.071
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.248
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.16
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.179
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.145
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.249
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.246
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.159
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 16 ninact 0 lowbound -1611.37553136563
+iteration 3 nact 64 ninact 0 lowbound -1502.28084118583
+iteration 4 nact 256 ninact 0 lowbound -1404.90585064863
+iteration 5 nact 1024 ninact 0 lowbound -1323.16609539617
+iteration 6 nact 892 ninact 801 lowbound -1278.00455149132
+iteration 7 nact 1004 ninact 1442 lowbound -1263.73140392156
+iteration 8 nact 1736 ninact 2012 lowbound -1257.14812868147
+summary runtime:  2.23

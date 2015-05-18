@@ -1,0 +1,207 @@
+---
+title: "Reimplement for speed"
+author: "Andrew bray"
+date: "May 14, 2015"
+output: html_document
+---
+
+### Goal:
+Recast the data structures used in `lmmoptim` in order to speed up the algorithm. In particular:
+
+1. Change `lines` from a dataframe to a matrix with colnames.
+2. Change `boxes`, `active`, and `inactive` to a matrix with colnames and preallocate rows.
+
+### Baseline benchmark
+
+First we need a benchmark for how quickly the current implementation runs. Microbenchmark
+is not ideal for this large of a code chunk, but the example is dataset/model is fairly small.
+
+```{r loadpackages, message = FALSE, error = FALSE}
+library(devtools); library(microbenchmark)
+devtools::install_github("andrewpbray/lmmoptim")
+library("lmmoptim")
+data(hmo)
+```
+
+```{r baseline, cache = TRUE}
+# random intercept model
+y <- hmo$indPrem
+n <- length(y)
+mod <- lm(indPrem ~ state, data = hmo, x = TRUE)
+x <- mod$x[, 1, drop = FALSE]
+z <- mod$x[, -1, drop = FALSE]
+SigE <- diag(n)
+SigS <- diag(44)
+
+lines <- findlines(x, z, y, SigE, SigS)
+mlrebox <- with(lines,
+                makebox(lims.sigsqs = c(0, max(int.sigsqs[is.finite(int.sigsqs)])),
+	                      lims.sigsqe = c(0, max(int.sigsqe[is.finite(int.sigsqe)])),
+	                      status = rep("straddle", nrow(lines)),
+                        lines = lines))
+
+m_baseline <- microbenchmark(fitlmm(lines = lines, mlrebox, eps = 1, delE = 10, 
+                            delS = 10, M = 5, maxit = 8), times = 10)
+plot(m_baseline)
+```
+
+### Some testers
+
+Conclusions:
+
+1. Sanity checks are expensive.
+2. Comments are not.
+3. For dataframes, `with()` is faster than $.
+4. Matrices are faster than `with()` on dataframes for basic vector math.
+5. Only slightly faster to use pmin/pmax to find lb, ub, but made much
+faster with lines as a matrix instead of a dataframe.
+6. (In splitbox) 4 separate calls to makebox() are faster than applying over
+a matrix of limits.
+
+```{r enterdat}
+lims.sigsqe = c(1, max(lines$int.sigsqe[is.finite(lines$int.sigsqe)]))
+lims.sigsqs = c(1, max(lines$int.sigsqs[is.finite(lines$int.sigsqs)]))
+status <- rep("straddle", nrow(lines))
+status[seq(1, 35, 5)] <- "above"
+status[seq(2, 35, 4)] <- "below"
+```
+
+```{r test2}
+g1 <- function(lims.sigsqe, lims.sigsqs, lines, status) {
+# ca;lekna;lkef'apoe fj'apoej f'ae
+  # ca;lekna;lkef'apoe fj'apoej f'aesefes
+  # ca;lekna;lkef'apoe fj'apoej f'aesefaef
+  # ca;lekna;lkef'apoe fj'apoej f'aeaed
+  lims.sigsqe + lims.sigsqs + nrow(lines) + length(status)
+}
+
+g2 <- function(lims.sigsqe, lims.sigsqs, lines, status) {
+  lims.sigsqe + lims.sigsqs + nrow(lines) + length(status)
+}
+
+lims.sigsqe <- 23
+lims.sigsqs <- 93
+lines <- data.frame(a <- 1:4)
+status <- c("a", "b", "c", "c")
+
+microbenchmark(
+  g1(lims.sigsqe, lims.sigsqs, lines, status),
+  g2(lims.sigsqe, lims.sigsqs, lines, status),
+  times = 2000L
+)
+```
+
+```{r test3}
+g1 <- function(lims.sigsqe, lims.sigsqs, lines, status) {
+    # evaluate each line at the upper-right corner of the box
+    with(lines, a * lims.sigsqs[2] + b * lims.sigsqe[2])
+}
+
+g2 <- function(lims.sigsqe, lims.sigsqs, lines, status) {
+    # evaluate each line at the upper-right corner of the box
+    lines$a * lims.sigsqs[2] + lines$b * lims.sigsqe[2]
+}
+
+microbenchmark(
+  g1(lims.sigsqe, lims.sigsqs, lines, status),
+  g2(lims.sigsqe, lims.sigsqs, lines, status),
+  times = 500L
+)
+```
+
+```{r test4}
+g1 <- function(lims.sigsqe, lims.sigsqs, lines, status) {
+    # evaluate each line at the upper-right corner of the box
+    with(lines, a * lims.sigsqs[2] + b * lims.sigsqe[2])
+}
+
+g2 <- function(lims.sigsqe, lims.sigsqs, lines, status) {
+    # evaluate each line at the upper-right corner of the box
+    mines[,"a"] * lims.sigsqs[2] + mines[,"b"] * lims.sigsqe[2]
+}
+
+mines <- as.matrix(lines)
+microbenchmark(
+  g1(lims.sigsqe, lims.sigsqs, lines, status),
+  g2(lims.sigsqe, lims.sigsqs, mines, status),
+  times = 500L
+)
+```
+
+```{r test5}
+ur <- with(lines, a * lims.sigsqs[2] + b * lims.sigsqe[2])
+eval.ur <- with(lines, -0.5 * (multiplier.log * log(ur) + multiplier.inv/ur))
+ll <- with(lines, a * lims.sigsqs[1] + b * lims.sigsqe[1])
+eval.ll <- ifelse(ll == 0, -Inf, with(lines, -0.5 * (multiplier.log * log(ll) +
+multiplier.inv/ll)))
+
+g1 <- function(eval.ur, eval.ll, lines, status) {
+    bounds <- matrix(rep(eval.ur, 2), ncol = 2)
+    bounds[status != "above", 1] <- eval.ll[status != "above"]
+    bounds[status == "above", 2] <- eval.ll[status == "above"]
+    strad <- status == "straddle"
+    bounds[strad, 1] <- pmin(eval.ur[strad], eval.ll[strad])
+    bounds[strad, 2] <- with(lines[strad, ], ifelse(is.na(int.sigsqe), -0.5 *
+       (multiplier.log * log(int.sigsqs) + multiplier.inv/int.sigsqs), -0.5 *
+       (multiplier.log * log(int.sigsqe) + multiplier.inv/int.sigsqe)))
+    bounds
+}
+
+mines <- as.matrix(lines)
+
+g2 <- function(eval.ur, eval.ll, mines, status) {
+    bounds <- matrix(c(pmin(eval.ur, eval.ll),
+                     pmax(eval.ur, eval.ll)),
+                     ncol = 2)
+    strad <- status == "straddle"
+    bounds[strad, 2] <- -0.5 * (mines[strad, "multiplier.log"] * log(mines[strad, "int.sigsqs"]) + 
+                                  mines[strad, "multiplier.inv"]/mines[strad, "int.sigsqs"])
+    bounds
+}
+
+microbenchmark(
+  g1(eval.ur, eval.ll, lines, status),
+  g2(eval.ur, eval.ll, mines, status),
+  times = 500L
+)
+```
+
+
+### Convert lines to matrix
+
+```{r lines_as_matrix}
+devtools::install_github("andrewpbray/lmmoptim", ref = "dev")
+library("lmmoptim")
+
+# random intercept model
+y <- hmo$indPrem
+n <- length(y)
+mod <- lm(indPrem ~ state, data = hmo, x = TRUE)
+x <- mod$x[, 1, drop = FALSE]
+z <- mod$x[, -1, drop = FALSE]
+SigE <- diag(n)
+SigS <- diag(44)
+
+lines <- findlines(x, z, y, SigE, SigS)
+mlrebox <- with(lines,
+                makebox(lims.sigsqs = c(0, max(int.sigsqs[is.finite(int.sigsqs)])),
+	                      lims.sigsqe = c(0, max(int.sigsqe[is.finite(int.sigsqe)])),
+	                      status = rep("straddle", nrow(lines)),
+                        lines = lines))
+
+m_baseline <- microbenchmark(fitlmm(lines = lines, mlrebox, eps = 1, delE = 10, 
+                            delS = 10, M = 5, maxit = 8), times = 10)
+plot(m_baseline)
+```
+
+
+```{r lines, cache = TRUE}
+devtools::install_github("andrewpbray/lmmoptim", ref = "dev")
+library("lmmoptim")
+
+m_kids <- microbenchmark(fitlmm(lines = lines, mlrebox, eps = 1, delE = 10, 
+                            delS = 10, M = 5, maxit = 8), times = 10)
+plot(m_kids)
+```
+
+
