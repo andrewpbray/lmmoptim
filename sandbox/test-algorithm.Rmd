@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r tester, message = FALSE, error = FALSE, fig.align="center", fig.width=6, fig.height=6}
-# HMO Example
+# HMO Example Model 2
 library(dplyr)
 library(nlme) # the standard analysis, by REML
 library(devtools)
@@ -14,21 +14,63 @@ devtools::install_github("andrewpbray/lmmoptim")
 library("lmmoptim")
 
 data(hmo)
+data(hmo_states)
+hmobig <- left_join(hmo, hmo_states, by = "state")
 
-# mod <- lme(indPrem ~ 1, data = hmo, random = ~1 | state, control = list(apVar=TRUE))
-# summary(mod)
-
-# random intercept model
-y <- hmo$indPrem
+y <- hmobig$indPrem
 n <- length(y)
-mod <- lm(indPrem ~ state, data = hmo, x = TRUE)
-x <- mod$x[, 1, drop = FALSE]
-z <- mod$x[, -1, drop = FALSE]
+mod <- lm(indPrem ~ expPerAdm + (region == "NE") + state, data = hmobig, x = TRUE)
+x <- mod$x[, 1:3]
+z <- mod$x[, -(1:3), drop = FALSE]
 SigE <- diag(n)
 SigS <- diag(44)
+
+# the standard reml analysis
+mod <- lme(indPrem ~ expPerAdm + (region == "NE"), data = hmobig, random = ~1 | state)
+# summary(mod)
 
 lines <- findlines(x, z, y, SigE, SigS)
 
 showlines(lines)
 ```
 
+```{r boxes, message = FALSE, error = FALSE, fig.align="center", fig.width=6, fig.height=6}
+mlrebox <- with(lines,
+                makebox(lims.sigsqs = c(0, max(int.sigsqs[is.finite(int.sigsqs)])),
+	                      lims.sigsqe = c(0, max(int.sigsqe[is.finite(int.sigsqe)])),
+	                      status = rep("straddle", nrow(lines)),
+                        lines = lines))
+
+boxes.HH11 <- fitlmm(lines = lines, mlrebox, eps = 5, delE = log(10), 
+                     delS = log(10), ratio = TRUE, M = 5, maxit = 10)
+
+p <- showboxes(boxes.HH11)
+p + scale_x_continuous(name = expression(sigma[e]^2)) +
+    scale_y_continuous(name = expression(sigma[s]^2)) +
+    theme_bw()
+```
+
+```{r func, message = FALSE, error = FALSE, fig.align="center", fig.width=8, fig.height=6}
+p <- showfunc(boxes.HH11)
+p + scale_x_log10(name = expression(sigma[e]^2),
+                  breaks = c(100,300,1000,3000,10000)) +
+    scale_y_log10(name = expression(sigma[s]^2),
+                  breaks = c(30,100,300,1000,3000,10000)) +
+    theme_bw()
+```
+
+### Log file
+
+```{ }
+iteration 1 nact 4 ninact 0 lowbound -Inf
+iteration 2 nact 8 ninact 2 lowbound -1618.83678001852
+iteration 3 nact 16 ninact 6 lowbound -1509.2370259688
+iteration 4 nact 32 ninact 14 lowbound -1408.11599941679
+iteration 5 nact 64 ninact 30 lowbound -1325.98831096475
+iteration 6 nact 128 ninact 62 lowbound -1265.00580347443
+iteration 7 nact 240 ninact 130 lowbound -1256.34621948939
+iteration 8 nact 236 ninact 311 lowbound -1243.51152967149
+iteration 9 nact 380 ninact 452 lowbound -1240.59724792866
+iteration 10 nact 680 ninact 662 lowbound -1239.48873313273
+summary runtime:  0.855
+```
