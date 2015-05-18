@@ -10,10 +10,10 @@
 #' @param status factor of length of \code{lines} denoting the location of the box
 #'   relative to each line. If the box has a parent, these correspond to the status
 #'   of that parent. The levels are \{above, below, straddle\}.
-#' @param lines dataframe containing the constants that define the shape of each
+#' @param lines matrix containing the constants that define the shape of each
 #'   term in the sum. Output from \code{\link{findlines}}.
 #'
-#' @return A list containing:
+#' @return A matrix containing:
 #' \itemize{
 #'   \item limits of the box in \eqn{\sigma^2_e} (numeric vector of length 2)
 #'   \item limits of the box in \eqn{\sigma^2_s} (numeric vector of length 2)
@@ -24,15 +24,6 @@
 #'   }
 
 makebox <- function(lims.sigsqe = NA, lims.sigsqs = NA, status = NA, lines) {
-
-    # sanity checks
-    if (missing(lims.sigsqs) || missing(lims.sigsqe))
-        print("please supply lims.sigsqs and lims.sigsqe")
-    if (missing(status))
-        print("please supply status")
-    if (missing(lines))
-        print("please supply lines")
-
     # If the box has a parent then it inherits the parent's status.  But if the
     # parent straddles a line, we must check whether the child also straddles the
     # line.
@@ -45,8 +36,7 @@ makebox <- function(lims.sigsqe = NA, lims.sigsqs = NA, status = NA, lines) {
     bounds <- getbounds(lims.sigsqe = lims.sigsqe, lims.sigsqs = lims.sigsqs,
         status = status, lines = lines)
 
-    return(list(lims.sigsqe = lims.sigsqe, lims.sigsqs = lims.sigsqs, status = status,
-        bounds = colSums(bounds)))
+    return(c(lims.sigsqe, lims.sigsqs, status, bounds))
 }
 
 #' Split a parent box into 4 children.
@@ -54,28 +44,29 @@ makebox <- function(lims.sigsqe = NA, lims.sigsqs = NA, status = NA, lines) {
 #' Split a parent box into four equally sized boxes as part of the branching part
 #' of the algorithm.
 #'
-#' @param box list containing the properties of a parent box. Created as output
+#' @param box numeric vector containing the properties of a parent box. Created as output
 #'   from \code{\link{makebox}}.
-#' @param lines dataframe containing the constants that define the shape of each
+#' @param lines matrix containing the constants that define the shape of each
 #'   term in the sum. Output from \code{\link{findlines}}.
 #'
-#' @return a list of the four child boxes.
+#' @return a matrix of the four child boxes.
 
 splitbox <- function(box, lines) {
-    # split a box into four children
-    NW <- with(box, makebox(lims.sigsqe = c(lims.sigsqe[1], mean(lims.sigsqe)),
-        lims.sigsqs = c(mean(lims.sigsqs), lims.sigsqs[2]), status = status,
-        lines = lines))
-    NE <- with(box, makebox(lims.sigsqe = c(mean(lims.sigsqe), lims.sigsqe[2]),
-        lims.sigsqs = c(mean(lims.sigsqs), lims.sigsqs[2]), status = status,
-        lines = lines))
-    SW <- with(box, makebox(lims.sigsqe = c(lims.sigsqe[1], mean(lims.sigsqe)),
-        lims.sigsqs = c(lims.sigsqs[1], mean(lims.sigsqs)), status = status,
-        lines = lines))
-    SE <- with(box, makebox(lims.sigsqe = c(mean(lims.sigsqe), lims.sigsqe[2]),
-        lims.sigsqs = c(lims.sigsqs[1], mean(lims.sigsqs)), status = status,
-        lines = lines))
-    return(list(NW, NE, SW, SE))
+  # split a box into four children
+  boxes <- matrix(NA, nrow = 4, ncol = length(box))
+  boxes[1, ] <- makebox(lims.sigsqe = c(box$lims.sigsqe.l, mean(box$lims.sigsqe.l, box$lims.sigsqe.u)), # NW
+                lims.sigsqs = c(mean(box$lims.sigsqs.l, box$lims.sigsqs.u), box$lims.sigsqs.u),
+                status = status, lines = lines)
+  boxes[2, ] <- makebox(lims.sigsqe = c(mean(box$lims.sigsqe.l, box$lims.sigsqe.u), box$lims.sigsqe.u), # NE
+                lims.sigsqs = c(mean(box$lims.sigsqs.l, box$lims.sigsqs.u), box$lims.sigsqs.u),
+                status = status, lines = lines)
+  boxes[3, ] <- makebox(lims.sigsqe = c(box$lims.sigsqe.l, mean(box$lims.sigsqe.l, box$lims.sigsqe.u)), # SW
+                lims.sigsqs = c(box$lims.sigsqs.l, mean(box$lims.sigsqs.l, box$lims.sigsqs.u)),
+                status = status, lines = lines)
+  boxes[4, ] <- makebox(lims.sigsqe = c(mean(box$lims.sigsqe.l, box$lims.sigsqe.u), box$lims.sigsqe.u), # SE
+                lims.sigsqs = c(box$lims.sigsqs.l, mean(box$lims.sigsqs.l, box$lims.sigsqs.u)),
+                status = status, lines = lines)
+    return(boxes)
 }
 
 #' Get the location of a box relative to lines.
@@ -87,7 +78,7 @@ splitbox <- function(box, lines) {
 #'   containing the x-limits of the box.
 #' @param lims.sigsqs numeric vector of length 2 of the form \code{c(lower, upper)}
 #'   containing the y-limits of the box.
-#' @param lines dataframe containing the constants that define the shape of each
+#' @param lines matrix containing the constants that define the shape of each
 #'   term in the sum. Output from \code{\link{findlines}}.
 #'
 #' @return A factor of length of \code{lines} denoting the location of the box
@@ -98,17 +89,17 @@ getstatus <- function(lims.sigsqe, lims.sigsqs, lines) {
     # intercepts?
 
     # value of the lines at the left side of the box
-    tmp1 <- lines$int.sigsqs + lines$slope * lims.sigsqe[1]
+    tmp1 <- lines$int.sigsqs + lines$slope * lims.sigsqe.l
     tmp1[is.infinite(tmp1)] <- NA
 
     # value of the lines at the right side of the box
-    tmp2 <- lines$int.sigsqs + lines$slope * lims.sigsqe[2]
+    tmp2 <- lines$int.sigsqs + lines$slope * lims.sigsqe.u
     tmp2[is.infinite(tmp2)] <- NA
 
     # where is the box relative to the lines?
     status <- rep("straddle", nrow(lines))
-    status[lims.sigsqs[1] > tmp1] <- "above"
-    status[lims.sigsqs[2] < tmp2] <- "below"
+    status[lims.sigsqs.l > tmp1] <- "above"
+    status[lims.sigsqs.u < tmp2] <- "below"
 
     return(status)
 }
@@ -122,7 +113,7 @@ getstatus <- function(lims.sigsqe, lims.sigsqs, lines) {
 #'   containing the x-limits of the box.
 #' @param lims.sigsqs numeric vector of length 2 of the form \code{c(lower, upper)}
 #'   containing the y-limits of the box.
-#' @param lines dataframe containing the constants that define the shape of each
+#' @param lines matrix containing the constants that define the shape of each
 #'   term in the sum. Output from \code{\link{findlines}}.
 #' @param status factor of length of \code{lines} denoting the location of the box
 #'   relative to each line.
@@ -133,23 +124,13 @@ getstatus <- function(lims.sigsqe, lims.sigsqs, lines) {
 #' \code{c(lower, upper)} bounds on the full objective function.
 
 getbounds <- function(lims.sigsqe, lims.sigsqs, lines, status) {
-    # small sanity check
-#     if (missing(lims.sigsqe) || missing(lims.sigsqs))
-#         print("Please supply lims.sigsqe and lims.sigsqs")
-#     if (missing(lines))
-#         print("Please supply lines")
-#     if (missing(status))
-#         print("Please supply status")
-#     if (length(status) != nrow(lines))
-#         print("length(status) != nrow(lines)")
-
     # evaluate each line at the upper-right corner of the box
-    ur <- with(lines, a * lims.sigsqs[2] + b * lims.sigsqe[2])
-    eval.ur <- with(lines, -0.5 * (multiplier.log * log(ur) + multiplier.inv/ur))
+    ur <- lines$a * lims.sigsqs[2] + lines$b * lims.sigsqe[2]
+    eval.ur <- -0.5 * (lines$multiplier.log * log(ur) + lines$multiplier.inv/ur)
     # evaluate each line at the lower-left corner of the box
-    ll <- with(lines, a * lims.sigsqs[1] + b * lims.sigsqe[1])
-    eval.ll <- ifelse(ll == 0, -Inf, with(lines, -0.5 * (multiplier.log * log(ll) +
-        multiplier.inv/ll)))
+    ll <- lines$a * lims.sigsqs[1] + lines$b * lims.sigsqe[1]
+    eval.ll <- ifelse(ll == 0, -Inf, -0.5 * (lines$multiplier.log * log(ll) +
+        lines$multiplier.inv/ll))
 
     bounds <- matrix(rep(eval.ur, 2), ncol = 2)
     # The next two lines of code are for lines that are not straddled.  'above'
@@ -161,9 +142,11 @@ getbounds <- function(lims.sigsqe, lims.sigsqs, lines, status) {
     bounds[strad, 1] <- pmin(eval.ur[strad], eval.ll[strad])
     # for the upper bound, we can evaluate anywhere on the line, so we might as
     # well evaluate at (int.sigsqe,0)
-    bounds[strad, 2] <- with(lines[strad, ], ifelse(is.na(int.sigsqe), -0.5 *
-       (multiplier.log * log(int.sigsqs) + multiplier.inv/int.sigsqs), -0.5 *
-       (multiplier.log * log(int.sigsqe) + multiplier.inv/int.sigsqe)))
+    bounds[strad, 2] <- ifelse(is.na(lines[strad, "int.sigsqe"]),
+                               -0.5 * (lines[strad, "multiplier.log"] * log(lines[strad, "int.sigsqs"]) +
+                                       lines[strad, "multiplier.inv"]/lines[strad, "int.sigsqs"]),
+                               -0.5 * (lines[strad, "multiplier.log"] * log(lines[strad, "int.sigsqe"]) +
+                                       lines[strad, "multiplier.inv"]/lines[strad, "int.sigsqe"]))
 
-    return(bounds)
+    return(colSums(bounds))
 }
