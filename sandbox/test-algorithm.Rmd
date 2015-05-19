@@ -62,6 +62,7 @@ p + scale_x_log10(name = expression(sigma[e]^2),
 ### Log file
 
 ```{ }
+#comment
 iteration 1 nact 4 ninact 0 lowbound -Inf
 iteration 2 nact 8 ninact 2 lowbound -1618.83678001852
 iteration 3 nact 16 ninact 6 lowbound -1509.2370259688
