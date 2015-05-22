@@ -24,7 +24,7 @@
 #'   line represented by each term in the sum. Created as output from
 #'   \code{\link{findlines}}.
 #' @param startbox a list of boxes and their bounds, possibly the output
-#'   from a previous call to \code{fitlmm}. If left empty, will create
+#'   from a previous call to \code{findf}. If left empty, will create
 #'   a new startbox from a call to \code{makebox}.
 #' @param eps a non-negative numeric indicating the tolerance within which you
 #'   would like to learn the function. Default is 0.
@@ -48,7 +48,7 @@
 #'   in the creation of a log file called "log.out" containing box counts at every
 #'   iteration.
 
-fitlmm <- function(lines, startbox, eps = 0, delE = 0, delS = 0, M = Inf, maxit = 10,
+findf <- function(lines, startbox, eps = 0, delE = 0, delS = 0, M = Inf, maxit = 10,
                    ratio = FALSE, lognote = "summary") {
 
     start_time <- Sys.time()
@@ -90,7 +90,7 @@ fitlmm <- function(lines, startbox, eps = 0, delE = 0, delS = 0, M = Inf, maxit 
         # each active box, either make it inactive or divide it.
         low.act <- max(vapply(X = active, FUN = function(box) {
             box$bounds[1]
-        }, FUN.VALUE = 0.1))
+          }, FUN.VALUE = 0.1))
         lowbound <- max(lowbound, low.act)
         kill <- vapply(X = active, FUN = killfunc, FUN.VALUE = TRUE, lb = lowbound,
             M = M, eps = eps, delE - delE, delS = delS, ratio = ratio)
