@@ -154,11 +154,11 @@ getbounds <- function(lims.sigsqe, lims.sigsqs, lines, status) {
     bounds <- matrix(rep(eval.ur, 2), ncol = 2)
     # The next two lines of code are for lines that are not straddled.  'above'
     # means the box is above the line
-    bounds[status != "above", 1] <- eval.ll[status != "above"]
-    bounds[status == "above", 2] <- eval.ll[status == "above"]
+    bounds[status != "above", 1] <- eval.ll[status != "above"] # lower
+    bounds[status == "above", 2] <- eval.ll[status == "above"] # upper
     # now we'll take care of straddled lines
     strad <- status == "straddle"
-    bounds[strad, 1] <- pmin(eval.ur[strad], eval.ll[strad])
+    bounds[strad, 1] <- pmin(eval.ur[strad], eval.ll[strad]) # lower
     # for the upper bound, we can evaluate anywhere on the line, so we might as
     # well evaluate at (int.sigsqe,0)
     bounds[strad, 2] <- with(lines[strad, ], ifelse(is.na(int.sigsqe), -0.5 *
