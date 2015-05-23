@@ -106,9 +106,11 @@ getstatus <- function(lims.sigsqe, lims.sigsqs, lines) {
     tmp2[is.infinite(tmp2)] <- NA
 
     # where is the box relative to the lines?
+    above <- with ( lines, ifelse ( slope > -Inf, lims.sigsqs[1] > tmp1, lims.sigsqe[1] > int.sigsqe ) )
+    below <- with ( lines, ifelse ( slope > -Inf, lims.sigsqs[2] < tmp2, lims.sigsqe[2] < int.sigsqe ) )
     status <- rep("straddle", nrow(lines))
-    status[lims.sigsqs[1] > tmp1] <- "above"
-    status[lims.sigsqs[2] < tmp2] <- "below"
+    status[above] <- "above"
+    status[below] <- "below"
 
     return(status)
 }
