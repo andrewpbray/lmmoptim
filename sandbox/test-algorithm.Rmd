@@ -5,12 +5,17 @@ date: "May 18, 2015"
 output: html_document
 ---
 
-```{r tester, message = FALSE, error = FALSE, fig.align="center", fig.width=6, fig.height=6}
-# HMO Example Model 2
+```{r globalops, message = FALSE, error = FALSE}
+library(knitr)
+opts_chunk$set(message = FALSE, error = FALSE, comment=NA, fig.align="center", 
+               echo = FALSE, fig.width=6, fig.height=6)
+```
+
+## Verify lines equivalence
+```{r lines, message = FALSE, error = FALSE, fig.align="center", fig.width=6, fig.height=6}
 library(dplyr)
-library(nlme) # the standard analysis, by REML
 library(devtools)
-devtools::install_github("andrewpbray/lmmoptim")
+devtools::install_github("andrewpbray/lmmoptim", ref = "v0.0.1")
 library("lmmoptim")
 
 data(hmo)
@@ -25,33 +30,244 @@ z <- mod$x[, -(1:3), drop = FALSE]
 SigE <- diag(n)
 SigS <- diag(44)
 
-# the standard reml analysis
-mod <- lme(indPrem ~ expPerAdm + (region == "NE"), data = hmobig, random = ~1 | state)
-# summary(mod)
+linesA <- findlines(x, z, y, SigE, SigS)
 
-lines <- findlines(x, z, y, SigE, SigS)
+devtools::install_github("andrewpbray/lmmoptim", ref = "v0.0.0.9000")
+library("lmmoptim")
 
-showlines(lines)
+linesB <- findlines(x, z, y, SigE, SigS)
 ```
 
-```{r boxes, message = FALSE, error = FALSE, fig.align="center", fig.width=6, fig.height=6}
-mlrebox <- with(lines,
+The only difference is that the lines dataframe in the new code (linesA) has an 
+extra column, "b", of all 1's, that the old code (linesB) does not have. They
+are otherwise equivalent.
+
+
+## Verify mlrebox equivalence
+```{r mlrebox, message = FALSE, error = FALSE, fig.align="center", fig.width=6, fig.height=6}
+mlreboxB <- with(linesB,
                 makebox(lims.sigsqs = c(0, max(int.sigsqs[is.finite(int.sigsqs)])),
 	                      lims.sigsqe = c(0, max(int.sigsqe[is.finite(int.sigsqe)])),
-	                      status = rep("straddle", nrow(lines)),
-                        lines = lines))
+	                      status = rep("straddle", nrow(linesB)),
+                        lines = linesB))
 
-boxes.HH11 <- fitlmm(lines = lines, mlrebox, eps = 5, delE = log(10), 
+devtools::install_github("andrewpbray/lmmoptim", ref = "v0.0.1")
+library("lmmoptim")
+
+mlreboxA <- with(linesA,
+                makebox(lims.sigsqs = c(0, max(int.sigsqs[is.finite(int.sigsqs)])),
+	                      lims.sigsqe = c(0, max(int.sigsqe[is.finite(int.sigsqe)])),
+	                      status = rep("straddle", nrow(linesA)),
+                        lines = linesA))
+```
+
+The old code returns a box where the bounds are a dataframe with a row for every
+term. For the new code, the terms have been summed over the column, leaving a
+single lower and upper. This structure will persist into the algorithm as the box
+list grows.
+
+
+## Verify findf input equivalence
+```{r input, message = FALSE, error = FALSE, eval = FALSE, fig.align="center", fig.width=6, fig.height=6}
+lines <- linesA
+startbox <- mlreboxA
+eps <- 5
+delE <- log(10)
+delS <- log(10)
+ratio <- TRUE
+M <- 5
+maxit <- 2
+
+inactive <- list()
+ninact <- 0
+# check whether startbox is a box or a list of boxes
+activeA <- ifelse(length(startbox) == 4 && identical(names(startbox),c("lims.sigsqe", 
+                                                                       "lims.sigsqs", "status", "bounds")), list(startbox), startbox)
+nact <- length(activeA)
+lowbound <- -Inf
+iter <- 0
+
+killfunc <- function(box, lb, M, eps, delE, delS, ratio) {
+  # lb is a lower bound on max f; it changes at each iteration. M, eps,
+  # delE, delS stay constant throughout the iterations.
+  cond.low <- box$bounds[2] < lb - M
+  cond.eps <- diff(box$bounds) < eps
+  cond.E <- ifelse(ratio, diff(log(box$lims.sigsqe)) < delE, diff(box$lims.sigsqe) <
+                     delE)
+  cond.S <- ifelse(ratio, diff(log(box$lims.sigsqs)) < delS, diff(box$lims.sigsqs) <
+                     delS)
+  return(cond.low || cond.eps || cond.E || cond.S)
+}
+
+low.act <- max(vapply(X = activeA, FUN = function(box) {
+  box$bounds[1]
+}, FUN.VALUE = 0.1))
+lowbound <- max(lowbound, low.act)
+kill <- vapply(X = activeA, FUN = killfunc, FUN.VALUE = TRUE, lb = lowbound,
+               M = M, eps = eps, delE - delE, delS = delS, ratio = ratio)
+ninact <- length(inactive)
+        
+lims.sigsqe = c(mean(activeA[[1]]$lims.sigsqe), activeA[[1]]$lims.sigsqe[2])
+lims.sigsqs = c(mean(activeA[[1]]$lims.sigsqs), activeA[[1]]$lims.sigsqs[2])
+statusA = activeA[[1]]$status
+
+strad <- which(statusA == "straddle")
+lines = lines[strad, ]
+
+tmp1A <- lines$int.sigsqs + lines$slope * lims.sigsqe[1]
+tmp1A[is.infinite(tmp1A)] <- NA
+
+# value of the lines at the right side of the box
+tmp2A <- lines$int.sigsqs + lines$slope * lims.sigsqe[2]
+tmp2A[is.infinite(tmp2A)] <- NA
+
+# where is the box relative to the lines?
+above <- with ( lines, ifelse ( slope > -Inf, lims.sigsqs[1] > tmp1A, lims.sigsqe[1] > int.sigsqe ) )
+below <- with ( lines, ifelse ( slope > -Inf, lims.sigsqs[2] < tmp2A, lims.sigsqe[2] < int.sigsqe ) )
+stats <- rep("straddle", nrow(lines))
+stats[above] <- "above"
+stats[below] <- "below"
+    
+statusA[strad] <- stats
+
+# we could get some of the bounds from the parent, but it's just as easy to
+# recalculate them
+boundsA <- getbounds(lims.sigsqe = lims.sigsqe, lims.sigsqs = lims.sigsqs,
+                    status = statusA, lines = lines)
+
+
+devtools::install_github("andrewpbray/lmmoptim", ref = "v0.0.0.9000")
+library("lmmoptim")
+
+lines <- linesB
+startbox <- mlreboxB
+
+inactive <- list()
+ninact <- 0
+# check whether startbox is a box or a list of boxes
+ifelse ( length(startbox)==4 && 
+           identical ( names(startbox),
+                       c("lims.sigsqe", "lims.sigsqs", "status", "bounds")
+           ),
+         activeB <- list(startbox),
+         activeB <- startbox
+)
+#active <- list()
+#active[[1]] <- startbox
+nact <- length(activeB)
+lowbound <- -Inf
+iter <- 0
+
+# conditions under which a box becomes inactive
+killfunc <- function ( box, lb, M, eps, delE, delS, ratio ) {
+  # lb is a lower bound on max logRL; it changes at each iteration
+  # M, eps, delE, delS stay constant throughout the iterations.
+  cond.low <- sum ( box$bounds$upper < lb - M )
+  cond.eps <- sum ( box$bounds$upper - box$bounds$lower ) < eps
+  cond.E <- ifelse ( ratio,
+                     diff ( log(box$lims.sigsqe) ) < delE,
+                     diff ( box$lims.sigsqe ) < delE
+  )
+  cond.S <- ifelse ( ratio,
+                     diff ( log(box$lims.sigsqs) ) < delS,
+                     diff ( box$lims.sigsqs ) < delS
+  )
+  return ( cond.low || cond.eps || cond.E || cond.S )
+}
+
+low.act <- max ( vapply ( X = activeB,
+                          FUN = function(box) { sum ( box$bounds$lower ) },
+                          FUN.VALUE = 0.1
+)
+)
+lowbound <- max ( lowbound, low.act )
+kill <- vapply ( X = activeB,
+                 FUN = killfunc,
+                 FUN.VALUE = TRUE,
+                 lb=lowbound, M=M,eps=eps, delE-delE, delS=delS, ratio=ratio
+)
+ninact <- length(inactive)
+
+lims.sigsqe = c ( mean(activeB[[1]]$lims.sigsqe), activeB[[1]]$lims.sigsqe[2] )
+lims.sigsqs = c ( mean(activeB[[1]]$lims.sigsqs), activeB[[1]]$lims.sigsqs[2] )
+statusB = activeB[[1]]$status
+
+strad <- which(statusB == "straddle")
+lines = lines[strad,]
+# value of the lines at the left side of the box
+tmp1B <- with ( lines, ifelse ( is.finite(slope),
+                               int.sigsqs + slope * lims.sigsqe[1],
+                               NA
+)
+)
+# value of the lines at the right side of the box
+tmp2B <- with ( lines, ifelse ( is.finite(slope),
+                               int.sigsqs + slope * lims.sigsqe[2],
+                               NA
+)
+)
+above <- with ( lines, ifelse ( slope > -Inf, lims.sigsqs[1] > tmp1B, lims.sigsqe[1] > int.sigsqe ) )
+below <- with ( lines, ifelse ( slope > -Inf, lims.sigsqs[2] < tmp2B, lims.sigsqe[2] < int.sigsqe ) )
+straddle <- !(above | below)
+
+# sanity check
+if ( any ( above & below ) ) print ( "a box can't be both above and below a line")
+
+stats <- rep ( NA, nrow(lines) )
+stats[above] <- "above"
+stats[below] <- "below"
+stats[straddle] <- "straddle"
+
+statusB[strad] <- stats
+
+boundsB <- getbounds ( lims.sigsqe = lims.sigsqe,
+                      lims.sigsqs = lims.sigsqs,
+                      status = statusB,
+                      lines = lines
+)
+```
+
+The problem appeared to be in the new version of getstatus(), which was not
+treating the case of a slope of -Inf.
+
+
+## Verify that bug is fixed
+
+```{r checkbugfix, message = FALSE, error = FALSE, fig.align="center", fig.width=6, fig.height=6}
+devtools::install_github("andrewpbray/lmmoptim")
+library("lmmoptim")
+
+system.time(
+boxes.HH11A <- findf(lines = linesA, mlreboxA, eps = 5, delE = log(10), 
                      delS = log(10), ratio = TRUE, M = 5, maxit = 10)
+)
 
-p <- showboxes(boxes.HH11)
+p <- showboxes(boxes.HH11A)
 p + scale_x_continuous(name = expression(sigma[e]^2)) +
     scale_y_continuous(name = expression(sigma[s]^2)) +
     theme_bw()
-```
 
-```{r func, message = FALSE, error = FALSE, fig.align="center", fig.width=8, fig.height=6}
-p <- showfunc(boxes.HH11)
+p <- showfunc(boxes.HH11A)
+p + scale_x_log10(name = expression(sigma[e]^2),
+                  breaks = c(100,300,1000,3000,10000)) +
+    scale_y_log10(name = expression(sigma[s]^2),
+                  breaks = c(30,100,300,1000,3000,10000)) +
+    theme_bw()
+
+devtools::install_github("andrewpbray/lmmoptim", ref = "v0.0.0.9000")
+library("lmmoptim")
+
+system.time(
+boxes.HH11B <- fitlmm(lines = linesB, mlreboxB, eps = 5, delE = log(10), 
+                     delS = log(10), ratio = TRUE, M = 5, maxit = 10)
+)
+
+p <- showboxes(boxes.HH11B)
+p + scale_x_continuous(name = expression(sigma[e]^2)) +
+    scale_y_continuous(name = expression(sigma[s]^2)) +
+    theme_bw()
+
+p <- showfunc(boxes.HH11B)
 p + scale_x_log10(name = expression(sigma[e]^2),
                   breaks = c(100,300,1000,3000,10000)) +
     scale_y_log10(name = expression(sigma[s]^2),
@@ -59,19 +275,5 @@ p + scale_x_log10(name = expression(sigma[e]^2),
     theme_bw()
 ```
 
-### Log file
+Victory.
 
-```{ }
-#comment
-iteration 1 nact 4 ninact 0 lowbound -Inf
-iteration 2 nact 8 ninact 2 lowbound -1618.83678001852
-iteration 3 nact 16 ninact 6 lowbound -1509.2370259688
-iteration 4 nact 32 ninact 14 lowbound -1408.11599941679
-iteration 5 nact 64 ninact 30 lowbound -1325.98831096475
-iteration 6 nact 128 ninact 62 lowbound -1265.00580347443
-iteration 7 nact 240 ninact 130 lowbound -1256.34621948939
-iteration 8 nact 236 ninact 311 lowbound -1243.51152967149
-iteration 9 nact 380 ninact 452 lowbound -1240.59724792866
-iteration 10 nact 680 ninact 662 lowbound -1239.48873313273
-summary runtime:  0.855
-```
