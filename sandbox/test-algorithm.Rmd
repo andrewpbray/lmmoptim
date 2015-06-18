@@ -1,7 +1,0 @@
----
-title: "Test Algorithm for Correctness"
-author: "Andrew bray"
-date: "May 18, 2015"
-output: html_document
----
-
