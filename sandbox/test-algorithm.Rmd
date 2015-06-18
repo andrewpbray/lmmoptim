@@ -277,3 +277,31 @@ p + scale_x_log10(name = expression(sigma[e]^2),
 
 Victory.
 
+```{r checkbugfix, message = FALSE, error = FALSE, fig.align="center", fig.width=6, fig.height=6}
+devtools::install_github("andrewpbray/lmmoptim")
+library("lmmoptim")
+
+boxes.HH11 <- findf(lines = linesA, mlreboxA, eps = 5, delE = log(10), 
+                     delS = log(10), ratio = TRUE, M = 5, maxit = 10)
+
+box2 <- with(linesA,
+             makebox(lims.sigsqe = c(300, 1000),
+                     lims.sigsqs = c(0, 1000),
+	                   status = rep("straddle", nrow(linesA)),
+                     lines = linesA))
+
+boxes.HH11 <- findf(lines = linesA, box2, eps = 1, M = 10, maxit = 15)
+
+linesA <- addprior(linesA, alpha_e = 1, beta_e = 0, alpha_s = 1.1, beta_s = .1)
+box3 <- with(linesA,
+             makebox(lims.sigsqe = c(300, 1000),
+                     lims.sigsqs = c(0, 1000),
+                     status = rep("straddle", nrow(linesA)),
+                     lines = linesA))
+
+boxes.HH11Bayes <- findf(lines = linesA, box3, eps = 1, M = 10, maxit = 20)
+
+
+```
+
+
