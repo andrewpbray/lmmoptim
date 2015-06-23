@@ -27,7 +27,7 @@ makebox <- function(lims.sigsqe = NA, lims.sigsqs = NA, status = NA, lines) {
     # If the box has a parent then it inherits the parent's status.  But if the
     # parent straddles a line, we must check whether the child also straddles the
     # line.
-    strad <- which(status == "straddle")
+    strad <- which(status == 2)
     status[strad] <- getstatus(lims.sigsqe = lims.sigsqe, lims.sigsqs = lims.sigsqs,
         lines = lines[strad, ])
 
@@ -66,7 +66,7 @@ splitbox <- function(box, lines) {
   boxes[4, ] <- makebox(lims.sigsqe = c(mean(box$lims.sigsqe.l, box$lims.sigsqe.u), box$lims.sigsqe.u), # SE
                 lims.sigsqs = c(box$lims.sigsqs.l, mean(box$lims.sigsqs.l, box$lims.sigsqs.u)),
                 status = status, lines = lines)
-    return(boxes)
+  return(boxes)
 }
 
 #' Get the location of a box relative to lines.
@@ -97,9 +97,9 @@ getstatus <- function(lims.sigsqe, lims.sigsqs, lines) {
     tmp2[is.infinite(tmp2)] <- NA
 
     # where is the box relative to the lines?
-    status <- rep("straddle", nrow(lines))
-    status[lims.sigsqs.l > tmp1] <- "above"
-    status[lims.sigsqs.u < tmp2] <- "below"
+    status <- rep(2, nrow(lines)) # straddle
+    status[lims.sigsqs.l > tmp1] <- 1 # above
+    status[lims.sigsqs.u < tmp2] <- 0 # below
 
     return(status)
 }
@@ -125,20 +125,20 @@ getstatus <- function(lims.sigsqe, lims.sigsqs, lines) {
 
 getbounds <- function(lims.sigsqe, lims.sigsqs, lines, status) {
     # evaluate each line at the upper-right corner of the box
-    ur <- lines$a * lims.sigsqs[2] + lines$b * lims.sigsqe[2]
-    eval.ur <- -0.5 * (lines$multiplier.log * log(ur) + lines$multiplier.inv/ur)
+    ur <- lines[, "a"] * lims.sigsqs[2] + lines[, "b"] * lims.sigsqe[2]
+    eval.ur <- -0.5 * (lines[, "multiplier.log"] * log(ur) + lines[, "multiplier.inv"]/ur)
     # evaluate each line at the lower-left corner of the box
-    ll <- lines$a * lims.sigsqs[1] + lines$b * lims.sigsqe[1]
-    eval.ll <- ifelse(ll == 0, -Inf, -0.5 * (lines$multiplier.log * log(ll) +
-        lines$multiplier.inv/ll))
+    ll <- lines[, "a"] * lims.sigsqs[1] + lines[, "b"] * lims.sigsqe[1]
+    eval.ll <- ifelse(ll == 0, -Inf, -0.5 * (lines[, "multiplier.log"] * log(ll) +
+        lines[, "multiplier.inv"]/ll))
 
     bounds <- matrix(rep(eval.ur, 2), ncol = 2)
     # The next two lines of code are for lines that are not straddled.  'above'
     # means the box is above the line
-    bounds[status != "above", 1] <- eval.ll[status != "above"]
-    bounds[status == "above", 2] <- eval.ll[status == "above"]
+    bounds[status != 1, 1] <- eval.ll[status != 1]
+    bounds[status == 1, 2] <- eval.ll[status == 1]
     # now we'll take care of straddled lines
-    strad <- status == "straddle"
+    strad <- status == 2
     bounds[strad, 1] <- pmin(eval.ur[strad], eval.ll[strad])
     # for the upper bound, we can evaluate anywhere on the line, so we might as
     # well evaluate at (int.sigsqe,0)
