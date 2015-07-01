@@ -1,0 +1,755 @@
+---
+title: "Branch, Bound, & Kill"
+subtitle: "a family-friendly algorithm for statistical inference"
+author: "Andrew Bray, Reed College"
+date: "July 2, 2015"
+output:
+  ioslides_presentation:
+    mathjax: "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+    logo: reed_seal.png
+---
+
+```{r global-opts, echo = FALSE, message = FALSE}
+library(knitr)
+opts_chunk$set(echo = FALSE, cache = TRUE, message = FALSE, error = FALSE)
+```
+
+# Branch, Bound, & Kill
+
+## Learning a function {.build .smaller}
+
+> - Where is the function high? Low?
+> - Steep? Flat?
+> - How many modes?
+
+$$
+f(x) = 18x - 3x^2 \\
+f'(x) = 18 - 6x \\
+f''(x) = -6
+$$
+
+```{r fx, fig.height = 3.5, fig.width = 4, fig.align='center'}
+x <- seq(-1, 7, .01)
+y <- 18 * x - 3 * x^2
+plot(y ~ x, type = "l", lwd = 3, col = "goldenrod")
+```
+
+## Learning a function without Calculus {.build}
+
+> - Evaluate $f(x)$ at any point $x$.
+> - Bound $f(x)$ on any interval of $x$.
+
+Learn by iterating over:
+
+1. **Bound**
+2. **Kill**
+3. **Branch**
+
+## Bound
+
+```{r boundplot1}
+library(shiny)
+library(wesanderson)
+library(dplyr)
+COL <- wes_palette("Cavalcanti", 5)
+COL[5] <- '#f03b20'
+COL[4] <- '#bd0026'
+d <- density(faithful$eruptions, adjust = .25)
+
+branchNbound <- function(m, d, it, epsilon) {
+  i <- 1
+  repeat {
+    names(m)[c(2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17)] <-
+      names(m)[c(2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17)][c(2, 1, 5, 6, 3, 4, 9, 10, 7, 8, 12, 11, 15, 13, 14)]
+
+    m <- m %>% group_by(membership_old) %>% # branch
+      mutate(membership_new = ifelse(active_new,
+                                     ifelse((membership_old - size) < ind & ind <= (membership_old - size/2),
+                                            membership_old - size/2, membership_old), membership_old)) %>%
+      mutate(size = ifelse(active_new, size/2, size)) %>%
+      mutate(xmin_new = ifelse(membership_new == membership_old & active_new == 1, (xmax_old - xmin_old)/2 + xmin_old, xmin_old)) %>%
+      mutate(xmax_new = ifelse(membership_new < membership_old & active_new == 1, (xmax_old - xmin_old)/2 + xmin_old, xmax_old)) %>%
+      ungroup() %>%
+      group_by(membership_new) %>% # bound
+      mutate(L_new = min(d$y[xmin_new < d$x & d$x < xmax_new])) %>%
+      mutate(U_new = max(d$y[xmin_new < d$x & d$x < xmax_new])) %>%
+      mutate(envelope_new = U_new - L_new) %>% # kill
+      mutate(active_newest = ifelse(envelope_new < epsilon, 0, 1)) %>%
+      ungroup()
+
+    i <- i + 1
+    if (i > it) break
+  }
+  m
+}
+
+maxit <- 8
+m <- data.frame("ind" = 1:2^maxit,
+                    "membership_old" = rep(2^maxit, 2^maxit),
+                    "membership_new" = rep(2^maxit, 2^maxit),
+                    "size" = rep(2^maxit, 2^maxit),
+                    "xmin_old" = rep(min(d$x), 2^maxit),
+                    "xmax_old" = rep(max(d$x), 2^maxit),
+                    "xmin_new" = rep(min(d$x), 2^maxit),
+                    "xmax_new" = rep(max(d$x), 2^maxit),
+                    "L_old" = rep(min(d$y), 2^maxit),
+                    "U_old" = rep(max(d$y), 2^maxit),
+                    "L_new" = rep(min(d$y), 2^maxit),
+                    "U_new" = rep(max(d$y), 2^maxit),
+                    "envelope_old" = rep(max(d$y) - min(d$y), 2^maxit),
+                    "envelope_new" = rep(max(d$y) - min(d$y), 2^maxit),
+                    "active_old" = rep(1, 2^maxit),
+                    "active_new" = rep(1, 2^maxit),
+                    "active_newest" = rep(1, 2^maxit))
+
+plot(range(d$x), range(d$y), type = "n", xlab = "x", ylab = "f(x)",
+     bty = "n", xaxp = c(1, 5.5, 10))
+#lines(d, col = COL[1], lwd = 3)
+
+m2 <- branchNbound(m, d, it = 1, epsilon = .1)
+```
+
+## Bound
+
+```{r boundplot2}
+plot(range(d$x), range(d$y), type = "n", xlab = "x", ylab = "f(x)",
+     bty = "n", xaxp = c(1, 5.5, 10))
+#lines(d, col = COL[1], lwd = 3)
+
+segs <- unique(m2$membership_old)
+for (i in segs) { # bound
+      seg_row <- m2 %>% filter(membership_old == i) %>% slice(1)
+      lines(c(seg_row$xmin_old, seg_row$xmax_old), rep(seg_row$L_old, 2), col = COL[2], lwd = 3)
+      lines(c(seg_row$xmin_old, seg_row$xmax_old), rep(seg_row$U_old, 2), col = COL[2], lwd = 3)
+}
+```
+
+## Kill?
+
+```{r killplot1}
+plot(range(d$x), range(d$y), type = "n", xlab = "x", ylab = "f(x)",
+     bty = "n", xaxp = c(1, 5.5, 10))
+#lines(d, col = COL[1], lwd = 3)
+
+segs <- unique(m2$membership_old)
+for (i in segs) { # bound
+      seg_row <- m2 %>% filter(membership_old == i) %>% slice(1)
+      lines(c(seg_row$xmin_old, seg_row$xmax_old), rep(seg_row$L_old, 2), col = COL[2], lwd = 3)
+      lines(c(seg_row$xmin_old, seg_row$xmax_old), rep(seg_row$U_old, 2), col = COL[2], lwd = 3)
+}
+```
+
+## Kill?
+
+```{r killplot2}
+plot(range(d$x), range(d$y), type = "n", xlab = "x", ylab = "f(x)",
+     bty = "n", xaxp = c(1, 5.5, 10))
+#lines(d, col = COL[1], lwd = 3)
+
+segs <- unique(m2$membership_old)
+for (i in segs) { # bound
+      seg_row <- m2 %>% filter(membership_old == i) %>% slice(1)
+      lines(c(seg_row$xmin_old, seg_row$xmax_old), rep(seg_row$L_old, 2), col = COL[2], lwd = 3)
+      lines(c(seg_row$xmin_old, seg_row$xmax_old), rep(seg_row$U_old, 2), col = COL[2], lwd = 3)
+}
+lines(x = c(5.4, 5.4), y = c(.25, .35), lwd = 3, col = COL[4])
+lines(x = c(5.35, 5.45), y = c(.25, .25), lwd = 3, col = COL[4])
+lines(x = c(5.35, 5.45), y = c(.35, .35), lwd = 3, col = COL[4])
+text(x = 5.48, y = .3, label = expression(epsilon), cex = 1.7)
+```
+
+## Branch
+
+```{r branchplot}
+plot(range(d$x), range(d$y), type = "n", xlab = "x", ylab = "f(x)",
+     bty = "n", xaxp = c(1, 5.5, 10))
+#lines(d, col = COL[1], lwd = 3)
+
+segs <- unique(m2$membership_old)
+for (i in segs) { # bound
+      seg_row <- m2 %>% filter(membership_old == i) %>% slice(1)
+      lines(c(seg_row$xmin_old, seg_row$xmax_old), rep(seg_row$L_old, 2), col = COL[2], lwd = 3)
+      lines(c(seg_row$xmin_old, seg_row$xmax_old), rep(seg_row$U_old, 2), col = COL[2], lwd = 3)
+# branch
+      seg_split <- m2$membership_new[!m2$membership_new == m2$membership_old]
+      for(i in seg_split) {
+        seg_row <- m2 %>% filter(membership_new == i) %>% slice(1)
+        lines(rep(seg_row$xmax_new, 2), c(-.2, 1.05 * max(d$y)), lty = 2, col = "darkgrey", lwd = 2)
+      }
+}
+```
+
+## Bound
+
+```{r branchboundplot}
+plot(range(d$x), range(d$y), type = "n", xlab = "x", ylab = "f(x)",
+     bty = "n", xaxp = c(1, 5.5, 10))
+#lines(d, col = COL[1], lwd = 3)
+
+dit <- 4
+m2 <- branchNbound(m, d, it = 2, epsilon = .2)
+segs <- unique(m2$membership_old)
+
+    for (i in segs) { # bound
+      seg_row <- m2 %>% filter(membership_old == i) %>% slice(1)
+      lines(c(seg_row$xmin_old, seg_row$xmax_old), rep(seg_row$L_old, 2), col = COL[2], lwd = 3)
+      lines(c(seg_row$xmin_old, seg_row$xmax_old), rep(seg_row$U_old, 2), col = COL[2], lwd = 3)
+      if(seg_row$active_old) {
+        lines(rep(seg_row$xmax_old, 2), c(-.2, 1.05 * max(d$y)), lty = 2, col = "lightgrey", lwd = 2) # (old branch)
+      }
+      if (seg_row$active_old + seg_row$active_new == 0) { # (old kill)
+        seg_row_end <- m2 %>% filter(membership_old == i) %>% slice(n())
+        polygon(c(seg_row$xmin_old, seg_row_end$xmax_old, seg_row_end$xmax_old, seg_row$xmin_old),
+                c(seg_row$L_old, seg_row$L_old, seg_row$U_old, seg_row$U_old),
+                col = COL[4], border = NA)
+      }
+      if (dit %in% seq(2, 24, 3)) { # new kill
+        if (seg_row$active_old + seg_row$active_new == 1) {
+          seg_row_end <- m2 %>% filter(membership_old == i) %>% slice(n())
+          polygon(c(seg_row$xmin_old, seg_row_end$xmax_old, seg_row_end$xmax_old, seg_row$xmin_old),
+                  c(seg_row$L_old, seg_row$L_old, seg_row$U_old, seg_row$U_old),
+                  col = COL[5], border = NA)
+        }
+      }
+      if (dit %in% seq(3, 24, 3)) { # recent kill
+        if (seg_row$active_old + seg_row$active_new == 1) {
+          seg_row_end <- m2 %>% filter(membership_old == i) %>% slice(n())
+          polygon(c(seg_row$xmin_old, seg_row_end$xmax_old, seg_row_end$xmax_old, seg_row$xmin_old),
+                  c(seg_row$L_old, seg_row$L_old, seg_row$U_old, seg_row$U_old),
+                  col = COL[4], border = NA)
+        }
+      }
+    }
+
+    if (dit %in% seq(3, 24, 3)) { # branch
+      seg_split <- m2$membership_new[!m2$membership_new == m2$membership_old]
+      for(i in seg_split) {
+        seg_row <- m2 %>% filter(membership_new == i) %>% slice(1)
+        lines(rep(seg_row$xmax_new, 2), c(-.2, 1.05 * max(d$y)), lty = 2, col = "darkgrey", lwd = 2)
+      }
+    }
+```
+
+## 
+
+```{r bkk-app, cache = FALSE, echo = FALSE, message=FALSE, eval = TRUE}
+library(shiny)
+library(wesanderson)
+library(dplyr)
+COL <- wes_palette("Cavalcanti", 5)
+COL[5] <- '#f03b20'
+COL[4] <- '#bd0026'
+d <- density(faithful$eruptions, adjust = .25)
+
+branchNbound <- function(m, d, it, epsilon) {
+  i <- 1
+  repeat {
+    names(m)[c(2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17)] <-
+      names(m)[c(2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17)][c(2, 1, 5, 6, 3, 4, 9, 10, 7, 8, 12, 11, 15, 13, 14)]
+
+    m <- m %>% group_by(membership_old) %>% # branch
+      mutate(membership_new = ifelse(active_new,
+                                     ifelse((membership_old - size) < ind & ind <= (membership_old - size/2),
+                                            membership_old - size/2, membership_old), membership_old)) %>%
+      mutate(size = ifelse(active_new, size/2, size)) %>%
+      mutate(xmin_new = ifelse(membership_new == membership_old & active_new == 1, (xmax_old - xmin_old)/2 + xmin_old, xmin_old)) %>%
+      mutate(xmax_new = ifelse(membership_new < membership_old & active_new == 1, (xmax_old - xmin_old)/2 + xmin_old, xmax_old)) %>%
+      ungroup() %>%
+      group_by(membership_new) %>% # bound
+      mutate(L_new = min(d$y[xmin_new < d$x & d$x < xmax_new])) %>%
+      mutate(U_new = max(d$y[xmin_new < d$x & d$x < xmax_new])) %>%
+      mutate(envelope_new = U_new - L_new) %>% # kill
+      mutate(active_newest = ifelse(envelope_new < epsilon, 0, 1)) %>%
+      ungroup()
+
+    i <- i + 1
+    if (i > it) break
+  }
+  m
+}
+
+
+shinyApp(
+  ui = fluidPage(fluidRow(plotOutput('bbplot', height = "400px")),
+          fluidRow(style = "padding-bottom: 0px;",
+                   column(1.5, numericInput("eps", label = "epsilon", value = .1, min = 0, max = .6, step = .1)),
+                   column(1.5, numericInput("maxiter", label = "iterations", min = 1, max = 12, value = 8,
+                                         step = 1)),
+                   column(4, sliderInput("it", label = "stage", min = 1, max = 24, value = 1,
+                                         step = 1, animate = animationOptions(loop = F, interval=2300))),
+                   column(2, radioButtons("radio", label = "",
+                                          choices = list("branch" = "option1", "bound" = "option2", "kill" = "option3"),
+                                          selected = "option2")),
+                   column(1.5, checkboxInput("showLine", "show function", value = FALSE))
+          )
+),
+
+
+  server = function(input, output, session) {
+  observe({
+    which_button <- c("option1", "option2", "option3")[(input$it %% 3) + 1]
+    updateRadioButtons(session, "radio", selected = which_button)
+
+    new_max <- input$maxiter * 3
+    updateSliderInput(session, "it", max = new_max)
+  })
+
+  m <- reactive({
+    maxit <- input$maxiter
+    data.frame("ind" = 1:2^maxit,
+                    "membership_old" = rep(2^maxit, 2^maxit),
+                    "membership_new" = rep(2^maxit, 2^maxit),
+                    "size" = rep(2^maxit, 2^maxit),
+                    "xmin_old" = rep(min(d$x), 2^maxit),
+                    "xmax_old" = rep(max(d$x), 2^maxit),
+                    "xmin_new" = rep(min(d$x), 2^maxit),
+                    "xmax_new" = rep(max(d$x), 2^maxit),
+                    "L_old" = rep(min(d$y), 2^maxit),
+                    "U_old" = rep(max(d$y), 2^maxit),
+                    "L_new" = rep(min(d$y), 2^maxit),
+                    "U_new" = rep(max(d$y), 2^maxit),
+                    "envelope_old" = rep(max(d$y) - min(d$y), 2^maxit),
+                    "envelope_new" = rep(max(d$y) - min(d$y), 2^maxit),
+                    "active_old" = rep(1, 2^maxit),
+                    "active_new" = rep(1, 2^maxit),
+                    "active_newest" = rep(1, 2^maxit))
+  })
+
+
+  output$bbplot <- renderPlot({
+    plot(range(d$x), range(d$y), type = "n", xlab = "x", ylab = "f(x)",
+         bty = "n", xaxp = c(1, 5.5, 10))
+
+    m2 <- branchNbound(m(), d, it = ceiling(input$it/3), epsilon = input$eps)
+    segs <- unique(m2$membership_old)
+
+    for (i in segs) { # bound
+      seg_row <- m2 %>% filter(membership_old == i) %>% slice(1)
+      lines(c(seg_row$xmin_old, seg_row$xmax_old), rep(seg_row$L_old, 2), col = COL[2], lwd = 3)
+      lines(c(seg_row$xmin_old, seg_row$xmax_old), rep(seg_row$U_old, 2), col = COL[2], lwd = 3)
+      if(seg_row$active_old) {
+        lines(rep(seg_row$xmax_old, 2), c(-.2, 1.05 * max(d$y)), lty = 2, col = "lightgrey", lwd = 2) # (old branch)
+      }
+      if (seg_row$active_old + seg_row$active_new == 0) { # (old kill)
+        seg_row_end <- m2 %>% filter(membership_old == i) %>% slice(n())
+        polygon(c(seg_row$xmin_old, seg_row_end$xmax_old, seg_row_end$xmax_old, seg_row$xmin_old),
+                c(seg_row$L_old, seg_row$L_old, seg_row$U_old, seg_row$U_old),
+                col = COL[4], border = NA)
+      }
+      if (input$it %in% seq(2, 36, 3)) { # new kill
+        if (seg_row$active_old + seg_row$active_new == 1) {
+          seg_row_end <- m2 %>% filter(membership_old == i) %>% slice(n())
+          polygon(c(seg_row$xmin_old, seg_row_end$xmax_old, seg_row_end$xmax_old, seg_row$xmin_old),
+                  c(seg_row$L_old, seg_row$L_old, seg_row$U_old, seg_row$U_old),
+                  col = COL[5], border = NA)
+        }
+      }
+      if (input$it %in% seq(3, 36, 3)) { # recent kill
+        if (seg_row$active_old + seg_row$active_new == 1) {
+          seg_row_end <- m2 %>% filter(membership_old == i) %>% slice(n())
+          polygon(c(seg_row$xmin_old, seg_row_end$xmax_old, seg_row_end$xmax_old, seg_row$xmin_old),
+                  c(seg_row$L_old, seg_row$L_old, seg_row$U_old, seg_row$U_old),
+                  col = COL[4], border = NA)
+        }
+      }
+    }
+    if (input$showLine) {lines(d, col = COL[1], lwd = 3)}
+
+    if (input$it %in% seq(3, 36, 3)) { # branch
+      seg_split <- m2$membership_new[!m2$membership_new == m2$membership_old]
+      for(i in seg_split) {
+        seg_row <- m2 %>% filter(membership_new == i) %>% slice(1)
+        lines(rep(seg_row$xmax_new, 2), c(-.2, 1.05 * max(d$y)), lty = 2, col = "darkgrey", lwd = 2)
+      }
+    }
+
+  })
+  }
+)
+```
+
+## An Algorithm{.build}
+
+To evaluate $f$ arbitrarily well everywhere within $B$,
+
+> 1. Specify $\epsilon$.
+> 2. For every active bin $b$
+>  - calculate $U^b - L^b$
+>  - if $U^b - L^b < \epsilon$, kill $b$
+>  - else branch $b$ into two $b$s and repeat (2).
+
+# Learning the Likelihood
+## Technique 1: Hill Climbers
+
+<div class="centered">
+<img src="http://upload.wikimedia.org/wikipedia/commons/9/96/Nelder_Mead2.gif" width="400px" />
+</div>
+
+## Technique 2: Gridded Evaluation
+
+```{r, echo = FALSE, fig.align='center', fig.height=4.5, fig.width=5.9, cache = TRUE, eval = FALSE}
+pPromote <- seq(0, 1, .05)
+Lfn <- function(pYgM, pYgF, tab, loglik = TRUE) {
+  lik <- dbinom(tab[1, 1], rowSums(tab)[1], pYgM) * dbinom(tab[2, 1], rowSums(tab)[2], pYgF)
+  if (loglik) {
+    return(log(lik))
+  } else {return(lik)}
+  }
+lik <- outer(pPromote, pPromote, tab = tab, FUN = Lfn, loglik = FALSE)
+
+# plot surface in original coordinates
+library(ggplot2); library(RColorBrewer)
+mypal <- colorRampPalette(brewer.pal(9 , "YlOrRd"))
+xyz <- data.frame(x = rep(pPromote, length(pPromote)),
+                    y = rep(pPromote, each = length(pPromote)),
+                    z = c(lik))
+xyz$zbinned <- cut(xyz$z, breaks = 9)
+p <- ggplot(xyz) + aes(x = x, y = y, fill = zbinned) +
+  geom_tile(color = "darkgray") +
+  scale_fill_manual(values = mypal(9), labels = c("low", "", "", "",
+                           "medium", "", "", "", "high"),
+                    guide = guide_legend(reverse=TRUE)) +
+  labs(x = expression(p[male]), y = expression(p[female]), fill = "Likelihood") +
+  theme_bw()
+p
+```
+
+
+## Branch, Bound, & Kill the Likelihood {.build}
+A method to evaluate the likelihood or posterior for a linear mixed model in order to
+
+1. **Profile** the shape of the function for sensible inference
+2. **Estimate** parameters
+
+while being sure that we're not missing the global optimum.
+
+\
+
+**How to calculate bounds?**
+
+## Linear Mixed Models {.build .flexbox .vcenter}
+
+$$
+y = X \beta + Z u + \epsilon
+$$
+
+- $y, X, Z$: data
+- $\beta, u$: fixed and random effects
+
+$$
+\epsilon \sim \textrm{N}(0, R); \quad u \sim \textrm{N}(0, G)
+$$
+
+<hr>
+
+The Restricted Log Likelihood:
+
+$$
+f (\color{red}{\sigma^2_e}, \color{red}{\sigma^2_s}) \propto \sum_{j=1}^m \left[ c_j \log (a_j \color{red}{\sigma^2_s} + b_j \color{red}{\sigma^2_e} ) +  \frac{d_j}{a_j \color{red}{\sigma^2_s} + b_j \color{red}{\sigma^2_e}} \right]
+$$
+
+$$
+\{a_j, b_j, c_j, d_j\} > 0
+$$
+
+
+## Exploiting the linear structure {.smaller .build}
+
+$$
+f(\sigma^2_e, \sigma^2_s) \propto \sum_j \left[ c_j \log (a_j \sigma^2_s + b_j \sigma^2_e ) + \frac{d_j}{(a_j \sigma^2_s + b_j \sigma^2_e)} \right]
+$$
+
+\
+<hr>
+Taking derivatives:
+
+$$
+\frac{\partial f(\sigma^2_e, \sigma^2_s)}{\partial \sigma^2_e} \propto \sum_j \frac{a_j (a_j c_j \sigma^2_s + b_j c_j \sigma^2_e - d_j)}{(a_j \sigma^2_s + b_j \sigma^2_e)^2}
+$$
+
+\
+
+\
+
+$$
+\begin{aligned}
+0 &= a_j c_j \sigma^2_s + b_j c_j \sigma^2_e - d_j \\
+\\
+\sigma^2_s &= \frac{d_j}{a_j c_j} - \frac{b_j}{a_j}\sigma^2_e
+\end{aligned}
+$$
+
+
+## Contribution of one term {.smaller .flexbox .vcenter}
+
+```{r heatmap, fig.align='center', fig.height=4.5, fig.width=5.9}
+npix <- 400
+a_j <- 12.9
+b_j <- 1
+c_j <- 1
+d_j <- 5
+x <- seq(0, 57, length.out = npix)
+y <- seq(0, 3, length.out = npix)
+fterm <- function(x, y, a_j, b_j) {
+  linearterm <- a_j * y + b_j * x
+  ifelse(linearterm == 0, NA,
+         -0.5 * (c_j * log(linearterm) + d_j/linearterm))
+}
+z <- outer(x, y, FUN = fterm, a_j = a_j, b_j = b_j)
+xyzdf <- data.frame(x = rep(x, npix),
+                    y = rep(y, each = npix),
+                    z = c(z))
+
+# plot surface in original coordinates
+library(ggplot2); library(RColorBrewer)
+mypal <- colorRampPalette(brewer.pal(9, "YlOrRd"))
+xyzdf$zbinned <- cut(xyzdf$z, breaks = c(-Inf, seq(-2.5, -1.3, length.out = 13)), right = FALSE)
+p <- ggplot(xyzdf) + aes(x = x, y = y, fill = zbinned) +
+  scale_fill_manual(values = mypal(13), labels = c("low", "", "", "", "", "",
+                           "medium", "", "", "", "", "", "high"),
+                    guide = guide_legend(reverse=TRUE)) +
+  labs(x = expression(sigma[e]^2), y = expression(sigma[s]^2), fill = "f") +
+  theme_bw()
+q <- p + geom_tile(alpha = 0) +
+  geom_abline(intercept = d_j / (a_j * c_j), slope = -b_j / a_j, col = "cadetblue", lwd = 1.5)
+q
+```
+
+$a_j = 12.9; \quad b_j = 1; \quad c_j = 1; \quad d_j = 5$
+
+$f$ is maxed along $\sigma^2_s = \frac{d_j}{a_j c_j} - \frac{b_j}{a_j}\sigma^2_e$
+
+
+## Contribution of one term {.smaller .flexbox .vcenter}
+
+```{r heatmap2, fig.align='center', fig.height=4.5, fig.width=5.9}
+q + annotate("point", pch = "+", x = 1, y = .05, size = 13) +
+  annotate("point", pch = "-", x = 7, y = .3, size = 16)
+```
+
+&nbsp;
+
+&nbsp;
+
+## Contribution of one term {.smaller .flexbox .vcenter}
+
+```{r heatmap3, fig.align='center', fig.height=4.5, fig.width=5.9}
+w <- p + geom_tile() + 
+  geom_abline(intercept = d_j / (a_j * c_j), slope = -b_j / a_j, col = "cadetblue", lwd = 1.5)
+w
+```
+
+&nbsp;
+
+&nbsp;
+
+## Box above line {.smaller .flexbox .vcenter}
+
+```{r heatmap4, fig.align='center', fig.height=4.5, fig.width=5.9}
+w + annotate("rect", xmin = 15, xmax = 25, ymin = .65, ymax = 1.2, alpha = .2) 
+```
+
+&nbsp;
+
+&nbsp;
+
+## Box above line {.smaller .flexbox .vcenter}
+
+```{r heatmap5, fig.align='center', fig.height=4.5, fig.width=5.9}
+b1 <- w + annotate("rect", xmin = 15, xmax = 25, ymin = .65, ymax = 1.2, alpha = .2) +
+  annotate("point", x = 15, y = .65) +  
+  annotate("text", x = 17, y = .59, label = "A")
+b1
+```
+
+&nbsp;
+
+&nbsp;
+
+## Box above line {.smaller .flexbox .vcenter}
+
+```{r heatmap6, fig.align='center', fig.height=4.5, fig.width=5.9}
+b2 <- b1 + annotate("point", x = 25, y = 1.2) +  
+  annotate("text", x = 27, y = 1.14, label = "B")
+b2
+```
+
+Bounds on $f$ in box $b_a: \left(f(B), f(A) \right)$
+
+&nbsp;
+
+## Box straddles line {.smaller .flexbox .vcenter}
+
+```{r heatmap6b, fig.align='center', fig.height=4.5, fig.width=5.9}
+b2b <- w + annotate("rect", xmin = 2, xmax = 12, ymin = .1, ymax = .65, alpha = .2)
+b2b 
+```
+
+&nbsp;
+
+&nbsp;
+
+## Box straddles line {.smaller .flexbox .vcenter}
+
+```{r heatmap6c, fig.align='center', fig.height=4.5, fig.width=5.9}
+b2b + annotate("point", x = 2, y = .1) + 
+  annotate("text", x = 0, y = .12, label = "A") +
+  annotate("point", x = 12, y = .65) + 
+  annotate("text", x = 14, y = .59, label = "B") +
+  annotate("point", x = 2, y = .23) +  
+  annotate("text", x = 4, y = .3, label = "C")
+```
+
+Bounds on $f$ in box $b_s: \left(min\left(f(A), f(B)\right), f(C) \right)$
+
+&nbsp;
+
+## Branch for more precision {.smaller .flexbox .vcenter}
+
+```{r heatmap7pre, fig.align='center', fig.height=4.5, fig.width=5.9}
+w + annotate("rect", xmin = 15, xmax = 25, ymin = .65, ymax = 1.2, alpha = .2) 
+```
+
+&nbsp;
+
+&nbsp;
+
+## Branch for more precision {.smaller .flexbox .vcenter}
+
+```{r heatmap7, fig.align='center', fig.height=4.5, fig.width=5.9}
+b3 <- w + annotate("rect", xmin = 15, xmax = 19.5, ymin = .65, ymax = .925 - 0.0275, alpha = .2) +
+  annotate("rect", xmin = 20.5, xmax = 25, ymin = .65, ymax = .925 - 0.0275, alpha = .2) +
+  annotate("rect", xmin = 15, xmax = 19.5, ymin = .925 + 0.0275, ymax = 1.2, alpha = .2) + 
+  annotate("rect", xmin = 20.5, xmax = 25, ymin = .925 + 0.0275, ymax = 1.2, alpha = .2)
+b3
+```
+
+&nbsp;
+
+&nbsp;
+
+## Branch for more precision {.smaller .flexbox .vcenter}
+
+```{r heatmap8, fig.align='center', fig.height=4.5, fig.width=5.9}
+b4 <- b3 + annotate("point", x = 15, y = .65, col = "cadetblue") +
+  annotate("point", x = 20, y = .65, col = "cadetblue") +
+  annotate("point", x = 15, y = .925, col = "cadetblue") + 
+  annotate("point", x = 20, y = .925, col = "cadetblue")
+b4
+```
+
+&nbsp;
+
+&nbsp;
+
+## Branch for more precision {.smaller .flexbox .vcenter}
+
+```{r heatmap9, fig.align='center', fig.height=4.5, fig.width=5.9}
+b4 + annotate("point", x = 20, y = .925, col = "navajowhite") +
+  annotate("point", x = 25, y = .925, col = "navajowhite") +
+  annotate("point", x = 20, y = 1.2, col = "navajowhite") +
+  annotate("point", x = 25, y = 1.2, col = "navajowhite") 
+```
+
+&nbsp;
+
+&nbsp;
+
+## Observations from one term {.build}
+
+> - Each term is maximized along a line in Q1.
+> - Slope < 0 and intercept > 0.
+> - Within $b$ the top-right and bottom-left form the bounds.
+>     - above the line, $\left(f(TR), f(BL)\right)$
+>     - below the line, $\left(f(BL), f(TR)\right)$
+>     - straddle the line, $\left(min(f(TR), f(BL)), f(line)\right)$
+> - For narrower bounds, subdivide $b$ (branch).
+
+## Contribution of two terms {.smaller}
+
+```{r twoterms, fig.align='center', fig.height=4.5, fig.width=5.9}
+w2 <- p + geom_tile(alpha = 0) +
+  annotate("rect", xmin = 15, xmax = 25, ymin = .65, ymax = 1.2, alpha = .2) +
+  annotate("point", x = 25, y = 1.2) + 
+  annotate("text", x = 27, y = 1.14, label = "B") +
+  annotate("point", x = 15, y = .65) +  
+  annotate("text", x = 17, y = .59, label = "A")
+w2 + annotate("text", x = 11, y = .03, label = "j = 1", size = 4) +
+  geom_abline(intercept = d_j / (a_j * c_j), slope = -b_j / a_j, col = "cadetblue", lwd = 1.5)
+```
+
+$$
+j = 1; \quad \left(f_1(B), f_1(A) \right)
+$$
+
+&nbsp;
+
+## Contribution of two terms {.smaller .flexbox .vcenter}
+
+```{r twoterms2, fig.align='center', fig.height=4.5, fig.width=5.9}
+w2 + annotate("text", x = 11, y = .03, label = "j = 1", size = 4, col = "grey") +
+  geom_abline(intercept = d_j / (a_j * c_j), slope = -b_j / a_j, col = "lightgrey", lwd = 1.5) +
+  annotate("text", x = 53, y = .6, size = 4, label = "j = 2") + 
+  geom_abline(intercept = 1.8, slope = -.018, col = "cadetblue", lwd = 1.5)
+```
+
+$$
+j = 1; \quad \left(f_1(B), f_1(A) \right) \\
+j = 2; \quad \left(f_2(A), f_2(B) \right)
+$$
+
+## Contribution of two terms {.smaller .flexbox .vcenter}
+
+```{r twoterms3, fig.align='center', fig.height=4.5, fig.width=5.9}
+w2 + annotate("text", x = 11, y = .03, label = "j = 1", size = 4, col = "grey") +
+  geom_abline(intercept = d_j / (a_j * c_j), slope = -b_j / a_j, col = "lightgrey", lwd = 1.5) +
+  annotate("text", x = 53, y = .6, size = 4, label = "j = 2") +
+  geom_abline(intercept = 1.8, slope = -.018, col = "cadetblue", lwd = 1.5) 
+``` 
+
+
+$$
+ \left.\begin{aligned}
+        j &= 1; \quad \left(f_1(B), f_1(A) \right)\\
+        j &= 2; \quad \left(f_2(A), f_2(B) \right)
+       \end{aligned}
+ \right\}
+ \qquad \underbrace{f_1(B) + f_2(A)}_{L^b}, \underbrace{f_1(A) + f_2(B)}_{U^b}
+$$
+
+## Observations from two terms {.build}
+
+Within box $b$, the bounds on $f$ can be formed by
+
+$$
+L^b \equiv \sum_j L^b_j \\
+U^b \equiv \sum_j U^b_j
+$$
+
+where each term in the sum is $f_j(p)$ evaluated at the appropriate point $p$.
+
+## An algorithm {.build}
+
+To evaluate $f$ arbitrarily well everywhere within active box $B$,
+
+> 1. Specify $\epsilon$.
+> 2. With $y, X, Z$ compute $\{a_j, b_j, c_j, d_j\}$ for all $j$.
+> 3. For every active box $b$
+>  - evaluate $f_j(p)$ for all $j$ to get $L^b, U^b$
+>  - if $U^b - L^b < \epsilon$, make $b$ inactive
+>  - else subdivide $b$ into 4 active boxes and repeat (3).
+
+
+#
+## Unanswered questions {.build}
+
+1. General Algorithm
+    - establish worst-case runtime
+    - more sensible branching
+2. Algorithm on Likelihoods
+    - explore more bounding methods!
+3. Implementation
+    - `data.table()`
+    - bound inheritance
+
+
