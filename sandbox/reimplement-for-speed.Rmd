@@ -40,7 +40,7 @@ mlrebox <- with(lines,
 	                      status = rep("straddle", nrow(lines)),
                         lines = lines))
 
-m_baseline <- microbenchmark(fitlmm(lines = lines, mlrebox, eps = 1, delE = 10, 
+m_baseline <- microbenchmark(findf(lines = lines, mlrebox, eps = 1, delE = 10, 
                             delS = 10, M = 5, maxit = 8), times = 10)
 plot(m_baseline)
 ```

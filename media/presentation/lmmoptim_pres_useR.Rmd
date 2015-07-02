@@ -1,6 +1,5 @@
 ---
-title: "Branch, Bound, & Kill"
-subtitle: "a family-friendly algorithm for statistical inference"
+title: "Approximately Exact Calculations for LMM"
 author: "Andrew Bray, Reed College"
 date: "July 2, 2015"
 output:
@@ -14,32 +13,43 @@ library(knitr)
 opts_chunk$set(echo = FALSE, cache = TRUE, message = FALSE, error = FALSE)
 ```
 
-# Branch, Bound, & Kill
+## Where we're going {.build}
 
-## Learning a function {.build .smaller}
+### In short
+A method to get ML estimates for mixed models.
+
+### In full
+A general method to learn about a likelihood/posterior.
+
+### Organization
+> - **An Algorithm**: Bound, Kill, & Branch
+> - **The Statistics**: Linear Mixed Models
+> - **The Implementation**: R
+
+# An Algorithm
+
+## Learning a function {.build}
+
+```{r fx, fig.height = 3.5, fig.width = 4, fig.align='center'}
+library(ggplot2)
+d <- density(faithful$eruptions, adjust = .25)
+df <- data.frame(x = d$x, y = d$y)
+ggplot(df, aes(x = x, y = y)) + geom_line(col = "goldenrod") + theme_bw()
+```
 
 > - Where is the function high? Low?
 > - Steep? Flat?
 > - How many modes?
 
-$$
-f(x) = 18x - 3x^2 \\
-f'(x) = 18 - 6x \\
-f''(x) = -6
-$$
 
-```{r fx, fig.height = 3.5, fig.width = 4, fig.align='center'}
-x <- seq(-1, 7, .01)
-y <- 18 * x - 3 * x^2
-plot(y ~ x, type = "l", lwd = 3, col = "goldenrod")
-```
+## Learning a function {.build}
 
-## Learning a function without Calculus {.build}
+If you can:
 
 > - Evaluate $f(x)$ at any point $x$.
 > - Bound $f(x)$ on any interval of $x$.
 
-Learn by iterating over:
+Then you can learn by iterating over:
 
 1. **Bound**
 2. **Kill**
@@ -272,15 +282,14 @@ branchNbound <- function(m, d, it, epsilon) {
 shinyApp(
   ui = fluidPage(fluidRow(plotOutput('bbplot', height = "400px")),
           fluidRow(style = "padding-bottom: 0px;",
-                   column(1.5, numericInput("eps", label = "epsilon", value = .1, min = 0, max = .6, step = .1)),
-                   column(1.5, numericInput("maxiter", label = "iterations", min = 1, max = 12, value = 8,
+                   column(2, numericInput("eps", label = "epsilon", value = .1, min = 0, max = .6, step = .1)),
+                   column(2, numericInput("maxiter", label = "iterations", min = 1, max = 12, value = 8,
                                          step = 1)),
                    column(4, sliderInput("it", label = "stage", min = 1, max = 24, value = 1,
                                          step = 1, animate = animationOptions(loop = F, interval=2300))),
-                   column(2, radioButtons("radio", label = "",
+                   column(4, radioButtons("radio", label = "",
                                           choices = list("branch" = "option1", "bound" = "option2", "kill" = "option3"),
-                                          selected = "option2")),
-                   column(1.5, checkboxInput("showLine", "show function", value = FALSE))
+                                          selected = "option2"))
           )
 ),
 
@@ -353,7 +362,6 @@ shinyApp(
         }
       }
     }
-    if (input$showLine) {lines(d, col = COL[1], lwd = 3)}
 
     if (input$it %in% seq(3, 36, 3)) { # branch
       seg_split <- m2$membership_new[!m2$membership_new == m2$membership_old]
@@ -368,81 +376,18 @@ shinyApp(
 )
 ```
 
-## An Algorithm{.build}
 
-To evaluate $f$ arbitrarily well everywhere within $B$,
-
-> 1. Specify $\epsilon$.
-> 2. For every active bin $b$
->  - calculate $U^b - L^b$
->  - if $U^b - L^b < \epsilon$, kill $b$
->  - else branch $b$ into two $b$s and repeat (2).
-
-# Learning the Likelihood
-## Technique 1: Hill Climbers
-
-<div class="centered">
-<img src="http://upload.wikimedia.org/wikipedia/commons/9/96/Nelder_Mead2.gif" width="400px" />
-</div>
-
-## Technique 2: Gridded Evaluation
-
-```{r, echo = FALSE, fig.align='center', fig.height=4.5, fig.width=5.9, cache = TRUE, eval = FALSE}
-pPromote <- seq(0, 1, .05)
-Lfn <- function(pYgM, pYgF, tab, loglik = TRUE) {
-  lik <- dbinom(tab[1, 1], rowSums(tab)[1], pYgM) * dbinom(tab[2, 1], rowSums(tab)[2], pYgF)
-  if (loglik) {
-    return(log(lik))
-  } else {return(lik)}
-  }
-lik <- outer(pPromote, pPromote, tab = tab, FUN = Lfn, loglik = FALSE)
-
-# plot surface in original coordinates
-library(ggplot2); library(RColorBrewer)
-mypal <- colorRampPalette(brewer.pal(9 , "YlOrRd"))
-xyz <- data.frame(x = rep(pPromote, length(pPromote)),
-                    y = rep(pPromote, each = length(pPromote)),
-                    z = c(lik))
-xyz$zbinned <- cut(xyz$z, breaks = 9)
-p <- ggplot(xyz) + aes(x = x, y = y, fill = zbinned) +
-  geom_tile(color = "darkgray") +
-  scale_fill_manual(values = mypal(9), labels = c("low", "", "", "",
-                           "medium", "", "", "", "high"),
-                    guide = guide_legend(reverse=TRUE)) +
-  labs(x = expression(p[male]), y = expression(p[female]), fill = "Likelihood") +
-  theme_bw()
-p
-```
-
+# Statistics: Learning the Likelihood
 
 ## Branch, Bound, & Kill the Likelihood {.build}
 A method to evaluate the likelihood or posterior for a linear mixed model in order to
 
-1. **Profile** the shape of the function for sensible inference
+1. **Learn** the shape of the function for sensible inference
 2. **Estimate** parameters
 
 while being sure that we're not missing the global optimum.
 
-\
-
-**How to calculate bounds?**
-
-## Linear Mixed Models {.build .flexbox .vcenter}
-
-$$
-y = X \beta + Z u + \epsilon
-$$
-
-- $y, X, Z$: data
-- $\beta, u$: fixed and random effects
-
-$$
-\epsilon \sim \textrm{N}(0, R); \quad u \sim \textrm{N}(0, G)
-$$
-
-<hr>
-
-The Restricted Log Likelihood:
+### The Restricted Log Likelihood:
 
 $$
 f (\color{red}{\sigma^2_e}, \color{red}{\sigma^2_s}) \propto \sum_{j=1}^m \left[ c_j \log (a_j \color{red}{\sigma^2_s} + b_j \color{red}{\sigma^2_e} ) +  \frac{d_j}{a_j \color{red}{\sigma^2_s} + b_j \color{red}{\sigma^2_e}} \right]
@@ -739,17 +684,81 @@ To evaluate $f$ arbitrarily well everywhere within active box $B$,
 >  - if $U^b - L^b < \epsilon$, make $b$ inactive
 >  - else subdivide $b$ into 4 active boxes and repeat (3).
 
+# Implementation
 
-#
-## Unanswered questions {.build}
+## Example: HMO costs
 
-1. General Algorithm
-    - establish worst-case runtime
-    - more sensible branching
-2. Algorithm on Likelihoods
-    - explore more bounding methods!
-3. Implementation
-    - `data.table()`
-    - bound inheritance
+<div class="centered">
+<img src="hmo_HH11Bayes_rll.jpg" width="400px" />
+</div>
+
+## Log file {.flexbox .vcenter .smaller}
+
+```{r table1, results = "asis"}
+library(xtable)
+m <- matrix(c(1, 4, 0, -9999.99,
+              2, 16, 0, -1313.42,
+              3, 52, 3, -1285.05,
+              4, 132, 22, -1270.76,
+              5, 264, 88, -1263.98,
+              6, 628, 195, -1260.47,
+              7, 1780, 378, -1258.71,
+              8, 4188, 1111, -1257.70,
+              9, 5676, 3880, -1256.88,
+              10, 5136, 8272, -1255.56,
+              11, 5528, 12026, -1254.20,
+              12, 8236, 15495, -1252.84,
+              13, 12488, 20609, -1251.50,
+              14, 23852, 27134, -1250.26,
+              15, 22740, 45301, -1249.22,
+              16, 43228, 57234, -1248.77,
+              17, 160208, 60410, -1248.77,
+              18, 331900, 137643, -1248.77,
+              19, 575196, 325744, -1248.77,
+              20, 942860, 665225, -1248.77,
+              21, 722412, 1427482, -1248.77,
+              22, 0, 2149894, -1248.77),
+            ncol = 4, byrow = TRUE)
+
+colnames(m) <- c("Iteration", "Active boxes", "Inactive boxes", "L")
+m <- as.data.frame(m)
+m$Iteration <- as.integer(m$Iteration)
+m$`Active boxes` <- as.integer(m$`Active boxes`)
+m$`Inactive boxes` <- as.integer(m$`Inactive boxes`)
+tab <- xtable(m, align = c('c', 'c', 'c', 'c', 'c'))
+print(tab, type = "html", include.rownames = FALSE)
+```
+
+\
+\
+
+Runtime: 2.7 hrs on a macbook pro
+
+## R implementation
+### `lmmoptim`
+
+> - Structure: list
+> - Sequential growth within for-loop
+> - Base R
+
+### `lmmoptim, ref = "dev"`
+
+> - Structure: matrix
+> - Sensible pre-allocation with heuristics
+> - Rcpp in places
+> - Other models?
+
+
+## Acknowledgements
+
+- Michael Lavine, University of Massachusetts, Amherst
+
+- Jim Hodges, University of Minnesota
+
+- *R Packages*, Hadley Wickham, http://r-pkgs.had.co.nz/
+
+### Contact
+`github.com/andrewpbray/lmmoptim`
+`andrew.bray@gmail.com`
 
 
