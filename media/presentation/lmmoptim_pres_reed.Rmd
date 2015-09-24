@@ -258,7 +258,7 @@ segs <- unique(m2$membership_old)
 
 ## 
 
-```{r bkk-app, cache = FALSE, echo = FALSE, message=FALSE, eval = FALSE}
+```{r bkk-app, cache = FALSE, echo = FALSE, message=FALSE, eval = TRUE}
 library(shiny)
 library(wesanderson)
 library(dplyr)

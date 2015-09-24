@@ -200,6 +200,8 @@ f&#39;&#39;(x) = -6
 
 </article></slide><slide class=''><hgroup><h2></h2></hgroup><article  id="section-1">
 
+<p><div style="width: 100% ; height: 400px ; text-align: center; box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box;" class="muted well">Shiny applications not supported in static R Markdown documents</div></p>
+
 </article></slide><slide class=''><hgroup><h2>An Algorithm</h2></hgroup><article  id="an-algorithm" class="build">
 
 <p>To evaluate \(f\) arbitrarily well everywhere within \(B\),</p>
@@ -334,6 +336,19 @@ L(\color{red}{p_M}, \color{red}{p_F} | n, y, x) = {n \choose y} \color{red}{p_M}
 <p><br/> <strong>How to calculate bounds?</strong></p>
 
 </article></slide><slide class=''><hgroup><h2>Linear Mixed Models</h2></hgroup><article  id="linear-mixed-models" class="build flexbox vcenter">
+
+<p>\[
+y = X \beta + Z u + \epsilon
+\]</p>
+
+<ul>
+<li>\(y, X, Z\): data</li>
+<li>\(\beta, u\): fixed and random effects</li>
+</ul>
+
+<p>\[
+\epsilon \sim \textrm{N}(0, R); \quad u \sim \textrm{N}(0, G)
+\]</p>
 
 <hr>
 

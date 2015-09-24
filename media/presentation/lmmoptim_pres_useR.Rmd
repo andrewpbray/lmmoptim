@@ -759,6 +759,7 @@ Runtime: 2.7 hrs on a macbook pro
 
 ### Contact
 `github.com/andrewpbray/lmmoptim`
+
 `andrew.bray@gmail.com`
 
 
